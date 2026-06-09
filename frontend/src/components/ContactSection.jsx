@@ -61,7 +61,7 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-wider text-[#666] mb-1">Call us</div>
-                  <a href="tel:+918796306375" data-testid="contact-phone" className="text-[#333] hover:text-[#6B4F8C]">+91 87963 06375</a>
+                  <a href="tel:+918796306375" data-testid="contact-phone-link" className="text-[#333] hover:text-[#6B4F8C]">+91 87963 06375</a>
                 </div>
               </div>
               <div className="flex items-start gap-4">
