@@ -444,14 +444,29 @@ async def admin_analytics(_=Depends(get_current_admin)):
     cat_data = await db.leads.aggregate(category_pipeline).to_list(50)
     leads_per_category = [{"category": x["_id"], "count": x["count"]} for x in cat_data]
 
-    # leads per month (last 6 months)
-    leads_per_month = []
+    # leads per month (last 6 months) - single aggregation query instead of N+1
+    months = []
     for i in range(5, -1, -1):
         d = (now.replace(day=1) - timedelta(days=i*30))
-        ms = d.replace(day=1).date().isoformat()
-        next_month = (d.replace(day=28) + timedelta(days=4)).replace(day=1).date().isoformat()
-        count = await db.leads.count_documents({"created_at": {"$gte": ms, "$lt": next_month}})
-        leads_per_month.append({"month": d.strftime("%b %Y"), "count": count})
+        start = d.replace(day=1).date().isoformat()
+        end = (d.replace(day=28) + timedelta(days=4)).replace(day=1).date().isoformat()
+        months.append({"label": d.strftime("%b %Y"), "start": start, "end": end})
+
+    branches = []
+    for m in months:
+        branches.append({
+            "case": {"$and": [
+                {"$gte": ["$created_at", m["start"]]},
+                {"$lt": ["$created_at", m["end"]]},
+            ]},
+            "then": m["label"],
+        })
+    month_pipeline = [
+        {"$match": {"created_at": {"$gte": months[0]["start"], "$lt": months[-1]["end"]}}},
+        {"$group": {"_id": {"$switch": {"branches": branches, "default": "other"}}, "count": {"$sum": 1}}},
+    ]
+    month_data = {x["_id"]: x["count"] for x in await db.leads.aggregate(month_pipeline).to_list(20)}
+    leads_per_month = [{"month": m["label"], "count": month_data.get(m["label"], 0)} for m in months]
 
     return {
         "total_leads": total_leads,
