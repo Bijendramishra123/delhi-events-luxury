@@ -25,11 +25,11 @@ export default function AdminLayout() {
     <div className="min-h-screen flex bg-[#F8F5F2]" data-testid="admin-layout">
       <aside className="w-64 bg-white border-r border-[#BFA2DB]/20 flex flex-col">
         <div className="p-6 border-b border-[#BFA2DB]/20">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BFA2DB] to-[#6B4F8C] flex items-center justify-center text-white font-heading text-xl">D</div>
+          <div className="flex items-center gap-3">
+            <img src="/assets/logo.png" alt="Decodiaries" className="h-10 w-auto" />
             <div>
-              <div className="font-heading text-lg text-[#6B4F8C]">Admin</div>
-              <div className="text-xs text-[#666]">Event Planner</div>
+              <div className="font-heading text-base text-[#6B4F8C]">Admin</div>
+              <div className="text-[10px] text-[#666] uppercase tracking-wider">Event Planner</div>
             </div>
           </div>
         </div>

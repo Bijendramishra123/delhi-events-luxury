@@ -37,13 +37,15 @@ export default function Navbar() {
   return (
     <nav className={navClass} data-testid="navbar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <Link to="/" data-testid="logo-link" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BFA2DB] to-[#6B4F8C] flex items-center justify-center text-white font-heading text-xl shadow-md group-hover:scale-105 transition-transform">
-            D
-          </div>
-          <div className="leading-tight">
-            <div className="font-heading text-lg text-[#6B4F8C] font-semibold">Delhi NCR</div>
-            <div className="text-xs tracking-[0.2em] uppercase text-[#666]">Event Planner</div>
+        <Link to="/" data-testid="logo-link" className="flex items-center gap-3 group">
+          <img
+            src="/assets/logo.png"
+            alt="Decodiaries"
+            className="h-12 md:h-14 w-auto group-hover:scale-105 transition-transform"
+          />
+          <div className="hidden sm:block leading-tight border-l border-[#BFA2DB]/40 pl-3">
+            <div className="font-heading text-sm text-[#6B4F8C] font-semibold tracking-wide">Delhi NCR</div>
+            <div className="text-[10px] tracking-[0.2em] uppercase text-[#666]">Event Planner</div>
           </div>
         </Link>
 

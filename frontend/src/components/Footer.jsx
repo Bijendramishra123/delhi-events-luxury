@@ -8,20 +8,18 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#BFA2DB] to-[#6B4F8C] flex items-center justify-center text-white font-heading text-2xl">
-                D
-              </div>
-              <div>
-                <div className="font-heading text-xl">Delhi NCR</div>
-                <div className="text-xs tracking-[0.2em] uppercase text-white/70">Event Planner</div>
+            <div className="flex items-center gap-3 mb-6">
+              <img src="/assets/logo.png" alt="Decodiaries" className="h-14 w-auto" />
+              <div className="border-l border-white/20 pl-3 leading-tight">
+                <div className="font-heading text-base">Delhi NCR</div>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-white/70">Event Planner</div>
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed mb-6">
               Crafting bespoke luxury events across Delhi, Noida and Gurgaon with passion and precision.
             </p>
             <div className="flex gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" data-testid="footer-instagram" className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#BFA2DB] flex items-center justify-center transition-colors">
+              <a href="https://www.instagram.com/deco.diariesnoida?igsh=cmthdWlud3BoYndq&utm_source=qr" target="_blank" rel="noreferrer" data-testid="footer-instagram" className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#BFA2DB] flex items-center justify-center transition-colors">
                 <Instagram size={16} />
               </a>
               <a href="https://facebook.com" target="_blank" rel="noreferrer" data-testid="footer-facebook" className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#BFA2DB] flex items-center justify-center transition-colors">
@@ -65,7 +63,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Mail size={16} className="text-[#BFA2DB] mt-0.5" />
-                <a href="mailto:contact@delhincrevents.com" className="hover:text-[#BFA2DB]">contact@delhincrevents.com</a>
+                <a href="mailto:contact@decodiaries.com" className="hover:text-[#BFA2DB]">contact@decodiaries.com</a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin size={16} className="text-[#BFA2DB] mt-0.5" />
@@ -76,7 +74,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/60">
-          <div>© {new Date().getFullYear()} Delhi NCR Event Planner. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} Decodiaries — Delhi NCR Event Planner. All rights reserved.</div>
           <div className="flex gap-6">
             <Link to="/admin/login" data-testid="footer-admin-link" className="hover:text-[#BFA2DB]">Admin</Link>
             <span>Made with ♡ in Delhi</span>

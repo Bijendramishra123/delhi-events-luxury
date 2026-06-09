@@ -190,13 +190,13 @@ async def get_settings():
     if not settings:
         settings = {
             "id": "global",
-            "company_name": "Delhi NCR Event Planner",
+            "company_name": "Decodiaries — Delhi NCR Event Planner",
             "tagline": "Crafting Unforgettable Moments",
             "phone": "+91 87963 06375",
             "whatsapp": WHATSAPP_NUMBER,
-            "email": "contact@delhincrevents.com",
+            "email": "contact@decodiaries.com",
             "address": "Delhi NCR, India",
-            "instagram": "https://instagram.com/",
+            "instagram": "https://www.instagram.com/deco.diariesnoida?igsh=cmthdWlud3BoYndq&utm_source=qr",
             "facebook": "https://facebook.com/",
             "youtube": "https://youtube.com/",
         }

@@ -4,7 +4,7 @@ import { ArrowLeft, Check, MessageCircle, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import api, { buildWhatsAppLink, formatPrice } from "../lib/api";
+import api, { buildWhatsAppLink, openWhatsApp, formatPrice } from "../lib/api";
 
 export default function PackageDetailPage() {
   const { id } = useParams();
@@ -35,8 +35,8 @@ export default function PackageDetailPage() {
     ? pkg.gallery_images
     : [pkg.cover_image];
 
-  const wa = buildWhatsAppLink("918796306375",
-    `Hello Team,\n\nI would like to inquire about the "${pkg.package_name}" (${pkg.event_category}) package.\n\nName: \nEvent Date: \nLocation: \nBudget: \n\nPlease contact me.`);
+  const waMessage = `Hello Team,\n\nI would like to inquire about the "${pkg.package_name}" (${pkg.event_category}) package.\n\nName: \nEvent Date: \nLocation: \nBudget: \n\nPlease contact me.`;
+  const wa = buildWhatsAppLink("918796306375", waMessage);
 
   return (
     <div className="bg-[#F8F5F2] min-h-screen" data-testid="package-detail-page">
@@ -110,7 +110,8 @@ export default function PackageDetailPage() {
               <a
                 href={wa}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
+                onClick={(e) => openWhatsApp(e, "918796306375", waMessage)}
                 data-testid="detail-whatsapp"
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-6 py-4 rounded-full hover:scale-[1.02] transition-transform"
               >

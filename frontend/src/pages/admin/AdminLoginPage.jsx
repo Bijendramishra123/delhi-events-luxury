@@ -32,11 +32,9 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-[#F8F5F2] flex items-center justify-center px-4" data-testid="admin-login-page">
       <div className="w-full max-w-md bg-white rounded-2xl p-10 shadow-[0_20px_60px_rgb(107,79,140,0.12)]">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#BFA2DB] to-[#6B4F8C] mx-auto flex items-center justify-center text-white font-heading text-3xl mb-4">
-            D
-          </div>
+          <img src="/assets/logo.png" alt="Decodiaries" className="h-20 w-auto mx-auto mb-4" />
           <h1 className="font-heading text-3xl text-[#6B4F8C] mb-2">Admin Login</h1>
-          <p className="text-[#666] text-sm">Delhi NCR Event Planner</p>
+          <p className="text-[#666] text-sm">Decodiaries · Delhi NCR Event Planner</p>
         </div>
 
         <form onSubmit={submit} className="space-y-6">

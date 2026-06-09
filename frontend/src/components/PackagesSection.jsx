@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { MessageCircle, ArrowRight, Check } from "lucide-react";
-import api, { buildWhatsAppLink, formatPrice } from "../lib/api";
+import api, { buildWhatsAppLink, openWhatsApp, formatPrice } from "../lib/api";
 
 const CATEGORIES = ["All", "Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming"];
 

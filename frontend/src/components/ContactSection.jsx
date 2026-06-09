@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, MessageCircle, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import api, { buildWhatsAppLink, formatApiErrorDetail } from "../lib/api";
+import api, { buildWhatsAppLink, openWhatsApp, formatApiErrorDetail } from "../lib/api";
 
 const EVENT_TYPES = ["Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming", "Other"];
 const BUDGETS = ["Under ₹1L", "₹1L - ₹3L", "₹3L - ₹7L", "₹7L - ₹15L", "₹15L+"];
@@ -70,7 +70,7 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-wider text-[#666] mb-1">Email</div>
-                  <a href="mailto:contact@delhincrevents.com" data-testid="contact-email" className="text-[#333] hover:text-[#6B4F8C]">contact@delhincrevents.com</a>
+                  <a href="mailto:contact@decodiaries.com" data-testid="contact-email" className="text-[#333] hover:text-[#6B4F8C]">contact@decodiaries.com</a>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -87,7 +87,8 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
             <a
               href={buildWhatsAppLink(whatsapp, whatsappMessage)}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
+              onClick={(e) => openWhatsApp(e, whatsapp, whatsappMessage)}
               data-testid="contact-whatsapp-cta"
               className="inline-flex items-center gap-2 mt-10 bg-[#25D366] text-white px-6 py-3 rounded-full hover:scale-105 transition-transform"
             >

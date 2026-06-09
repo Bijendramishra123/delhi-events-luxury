@@ -21,6 +21,22 @@ export function buildWhatsAppLink(phone, message) {
   return `https://wa.me/${phone}?text=${encoded}`;
 }
 
+// Opens WhatsApp in a top-level new tab so it works inside iframes (preview/embed)
+// and avoids the api.whatsapp.com block when clicked from within an iframe context.
+export function openWhatsApp(e, phone, message) {
+  if (e && e.preventDefault) e.preventDefault();
+  const url = buildWhatsAppLink(phone, message);
+  try {
+    const w = window.open(url, "_blank", "noopener,noreferrer");
+    if (!w) {
+      // Popup blocked — fall back to top-level navigation
+      window.top.location.href = url;
+    }
+  } catch (err) {
+    window.location.href = url;
+  }
+}
+
 export function formatPrice(n) {
   if (n == null) return "—";
   return "₹" + Number(n).toLocaleString("en-IN");
