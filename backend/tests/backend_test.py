@@ -9,7 +9,7 @@ import uuid
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://delhi-events-luxury.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "at307580@gmail.com")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Mahi@123")
 WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "918796306375")
