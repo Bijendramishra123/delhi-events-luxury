@@ -1,0 +1,106 @@
+{
+  "project_name": "Delhi NCR Event Planner",
+  "theme_and_archetype": {
+    "theme": "Light",
+    "archetype": "Luxury (Archetype 5 customized for Light theme)",
+    "description": "Premium luxury event planning platform. Focuses on 'Modern Elegance' using generous whitespace, delicate contrast between off-white backgrounds and deep purple accents, and sophisticated serif typography to evoke a sense of exclusivity, trust, and bespoke service."
+  },
+  "colors": {
+    "background": {
+      "base": "#F8F5F2",
+      "surface": "#FFFFFF",
+      "glass": "rgba(248, 245, 242, 0.75)"
+    },
+    "primary": {
+      "lavender": "#BFA2DB",
+      "hover": "#A98CC5"
+    },
+    "accent": {
+      "deep_purple": "#6B4F8C",
+      "hover": "#4F3A6A"
+    },
+    "text": {
+      "main": "#333333",
+      "muted": "#666666",
+      "heading": "#6B4F8C",
+      "inverse": "#FFFFFF"
+    },
+    "border": {
+      "delicate": "rgba(191, 162, 219, 0.3)",
+      "strong": "#BFA2DB"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "heading": "'Playfair Display', serif",
+      "body": "'Poppins', sans-serif"
+    },
+    "hierarchy": {
+      "h1": "text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[#6B4F8C]",
+      "h2": "text-4xl md:text-5xl font-semibold tracking-tight text-[#6B4F8C]",
+      "h3": "text-2xl md:text-3xl font-medium text-[#6B4F8C]",
+      "h4": "text-xl md:text-2xl font-medium text-[#333333]",
+      "body": "text-base md:text-lg text-[#333333] leading-relaxed",
+      "small": "text-sm text-[#666666] tracking-wide uppercase",
+      "button": "text-base font-medium tracking-wide"
+    }
+  },
+  "spacing_and_layout": {
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "section_padding": "py-20 md:py-32",
+    "card_padding": "p-8 md:p-12",
+    "grid_bento": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8 lg:gap-12",
+    "border_radius": "rounded-2xl"
+  },
+  "components_strategy": {
+    "navbar": "Sticky header with backdrop-blur-xl and bg-[#F8F5F2]/80. Delicate bottom border. Navigation links must use hover:text-[#BFA2DB] transitions.",
+    "buttons": "Primary CTAs use bg-[#6B4F8C] text-white with hover:bg-[#4F3A6A] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-full px-8 py-4. Secondary buttons use border-2 border-[#BFA2DB] text-[#6B4F8C] hover:bg-[#BFA2DB] hover:text-white rounded-full px-8 py-4.",
+    "cards": "For events and packages: bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(107,79,140,0.1)] transition-all duration-500. Images must have overflow-hidden wrapper with hover:scale-105 transition on the img.",
+    "badges": "Availability/Discount badges: bg-[#BFA2DB] text-white text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-wider absolute top-4 right-4 z-10.",
+    "forms": "Inputs should have bg-transparent, border-b-2 border-[#BFA2DB]/50 focus:border-[#6B4F8C] focus:outline-none focus:ring-0 rounded-none px-0 py-3 text-[#333333] transition-colors placeholder:text-[#666666].",
+    "admin_dashboard": "Use Shadcn/UI for admin dashboard components (tables, dialogs, forms). Style cards with subtle border and flat colors. Primary admin color #6B4F8C."
+  },
+  "motion_and_interactions": {
+    "libraries": "framer-motion for scroll reveals and page transitions.",
+    "scroll_reveal": "Fade up with y: 40, opacity: 0 to y: 0, opacity: 1 over 0.8s duration.",
+    "image_hover": "Transform scale-105 duration-700 ease-out.",
+    "counters": "Use 'framer-motion' animate function for Stats Counter in Hero section (e.g. 500+ Events, 10+ Years)."
+  },
+  "media": {
+    "hero": {
+      "main": "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg",
+      "alt": "https://images.unsplash.com/photo-1712314947761-a8d718bd8c32?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBldmVudCUyMHZlbnVlJTIwaGFsbHxlbnwwfHx8fDE3ODEwMDAxMzl8MA&ixlib=rb-4.1.0&q=85",
+      "overlay": "bg-black/30 or bg-gradient-to-r from-black/50 to-transparent for text readability"
+    },
+    "categories": {
+      "wedding": "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg",
+      "birthday": "https://images.unsplash.com/photo-1741969494307-55394e3e4071?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwYmlydGhkYXklMjBwYXJ0eSUyMGRlY29yYXRpb25zfGVufDB8fHx8MTc4MTAwMDEzMnww&ixlib=rb-4.1.0&q=85",
+      "anniversary": "https://images.unsplash.com/photo-1756190564669-215843660e93?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjBpbmRpYW4lMjB3ZWRkaW5nJTIwZGVjb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85",
+      "baby_shower": "https://images.pexels.com/photos/1682462/pexels-photo-1682462.jpeg",
+      "corporate": "https://images.pexels.com/photos/26202153/pexels-photo-26202153.jpeg",
+      "engagement": "https://images.unsplash.com/photo-1618566864264-fb013f791da4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwyfHxlbmdhZ2VtZW50JTIwcmluZyUyMGNlcmVtb255JTIwY291cGxlfGVufDB8fHx8MTc4MTAwMDEzOXww&ixlib=rb-4.1.0&q=85",
+      "housewarming": "https://images.unsplash.com/photo-1649083048770-82e8ffd80431?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBob21lJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"
+    },
+    "gallery_samples": [
+      "https://images.unsplash.com/photo-1555244162-803834f70033?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwY2F0ZXJpbmclMjBmb29kJTIwZGlzcGxheXxlbnwwfHx8fDE3ODEwMDAxMzl8MA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBldmVudCUyMHZlbnVlJTIwaGFsbHxlbnwwfHx8fDE3ODEwMDAxMzl8MA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1729237261091-bae8eba0c60c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHw0fHxsdXh1cnklMjBpbmRpYW4lMjB3ZWRkaW5nJTIwZGVjb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"
+    ],
+    "testimonials": [
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMHNtaWxpbmd8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMHNtaWxpbmd8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85",
+      "https://images.pexels.com/photos/29086752/pexels-photo-29086752.jpeg"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Ensure global configuration of fonts Playfair Display and Poppins in HTML head and tailwind.config.js.",
+    "Do NOT use generic UI elements for the Marketing pages (Home, Gallery, Packages). Use pure HTML/Tailwind with framer-motion. Shadcn is strictly for the Admin Dashboard.",
+    "Include 'data-testid' on ALL buttons, inputs, links, forms, and major interactive widgets.",
+    "For WhatsApp integration, construct links using 'https://wa.me/{phonenumber}?text={encoded_message}' format.",
+    "Never use via.placeholder.com. Use the exact image URLs provided in the media section.",
+    "Use Lucide-react for standard icons.",
+    "For the masonry gallery, use pure CSS columns (columns-1 md:columns-2 lg:columns-3 gap-4) or a library like react-responsive-masonry.",
+    "In the Contact Form, validation is mandatory (use react-hook-form + zod). Include fields: name, phone, email, event type, date, location, budget, message.",
+    "Create a Full Stack Admin Dashboard using standard Shadcn primitives to manage Leads, Packages, Images, and Testimonials."
+  ]
+}
