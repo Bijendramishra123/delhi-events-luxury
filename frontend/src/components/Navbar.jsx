@@ -31,7 +31,7 @@ export default function Navbar() {
   }, [location]);
 
   const navClass = `fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
-    scrolled ? "bg-[#F8F5F2]/85 backdrop-blur-xl border-b border-[#BFA2DB]/20 py-3" : "bg-transparent py-5"
+    scrolled ? "bg-white/95 backdrop-blur-xl shadow-[0_4px_20px_rgba(107,79,140,0.08)] border-b border-[#BFA2DB]/30 py-3" : "bg-transparent py-5"
   }`;
 
   return (
@@ -51,10 +51,10 @@ export default function Navbar() {
               <a
                 href={l.to}
                 data-testid={`nav-${l.id}`}
-                className={`text-sm uppercase tracking-[0.18em] transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 hover:after:w-full after:transition-all after:duration-500 ${
+                className={`text-sm uppercase tracking-[0.18em] font-semibold transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 hover:after:w-full after:transition-all after:duration-500 ${
                   scrolled
-                    ? "text-[#333] hover:text-[#6B4F8C] after:bg-[#6B4F8C]"
-                    : "text-white hover:text-[#BFA2DB] after:bg-[#BFA2DB] drop-shadow-md"
+                    ? "text-[#6B4F8C] hover:text-[#4F3A6A] after:bg-[#6B4F8C]"
+                    : "text-white hover:text-[#BFA2DB] after:bg-[#BFA2DB] drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
                 }`}
               >
                 {l.label}
