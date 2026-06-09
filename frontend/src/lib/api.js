@@ -1,23 +1,62 @@
 import axios from "axios";
 
-export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
+const PRIMARY_URL = process.env.REACT_APP_BACKEND_URL;
+// Fallback to Emergent's always-working host if primary (custom domain) fails
+// e.g. SSL handshake errors, DNS issues, Cloudflare proxy misconfig on decodiaries.com
+const FALLBACK_URL = "https://delhi-events-luxury.emergent.host";
 
-// withCredentials sends the httpOnly access_token cookie set by /api/auth/login.
-// We intentionally no longer mirror the token in localStorage — that prevents
-// XSS-stealable tokens. The cookie is HttpOnly + SameSite=Lax (same-origin only).
+let activeBackend = PRIMARY_URL;
+
+export const BACKEND_URL = PRIMARY_URL;
+export const API = `${PRIMARY_URL}/api`;
+
 const api = axios.create({
-  baseURL: API,
+  baseURL: `${PRIMARY_URL}/api`,
   withCredentials: true,
 });
 
+// Track if we've already failed over to avoid loops
+let failedOver = false;
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const isNetworkError =
+      !error.response &&
+      (error.code === "ERR_NETWORK" ||
+        error.code === "ECONNABORTED" ||
+        error.message?.includes("Network Error") ||
+        error.message?.includes("SSL") ||
+        error.message?.includes("handshake"));
+
+    // If primary backend fails with network/SSL error, switch to fallback once
+    if (isNetworkError && !failedOver && activeBackend !== FALLBACK_URL) {
+      failedOver = true;
+      activeBackend = FALLBACK_URL;
+      api.defaults.baseURL = `${FALLBACK_URL}/api`;
+
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[api] Primary backend ${PRIMARY_URL} failed, falling back to ${FALLBACK_URL}`);
+      }
+
+      // Retry the original request against the fallback backend
+      const original = error.config;
+      original.baseURL = `${FALLBACK_URL}/api`;
+      return api.request(original);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;
+
+export function getActiveBackend() {
+  return activeBackend;
+}
 
 export function buildWhatsAppLink(phone, message) {
   const encoded = encodeURIComponent(message);
-  // Use web.whatsapp.com directly on desktop to avoid the wa.me → api.whatsapp.com
-  // redirect, which is blocked inside the Emergent preview iframe (ERR_BLOCKED_BY_RESPONSE).
-  // On mobile devices, we still use wa.me so it deep-links into the WhatsApp app.
   const isMobile = typeof navigator !== "undefined" &&
     /android|iphone|ipad|ipod|iemobile|blackberry|opera mini|mobile/i.test(navigator.userAgent || "");
   if (isMobile) {
@@ -26,16 +65,12 @@ export function buildWhatsAppLink(phone, message) {
   return `https://web.whatsapp.com/send?phone=${phone}&text=${encoded}`;
 }
 
-// Opens WhatsApp in a top-level new tab so it works inside iframes (preview/embed)
-// and avoids the api.whatsapp.com block when clicked from within an iframe context.
 export function openWhatsApp(e, phone, message) {
   if (e && e.preventDefault) e.preventDefault();
   const url = buildWhatsAppLink(phone, message);
   try {
     const w = window.open(url, "_blank", "noopener,noreferrer");
-    if (!w) {
-      window.top.location.href = url;
-    }
+    if (!w) window.top.location.href = url;
   } catch (err) {
     window.location.href = url;
   }

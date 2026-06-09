@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Copy, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import api, { BACKEND_URL } from "../../lib/api";
+import api, { getActiveBackend } from "../../lib/api";
 
 const CATEGORIES = ["Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming"];
 const AVAIL = ["Available", "Limited Availability", "Fully Booked", "Coming Soon"];
@@ -67,7 +67,7 @@ export default function AdminPackages() {
     fd.append("file", file);
     try {
       const { data } = await api.post("/admin/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      const url = `${BACKEND_URL}${data.url}`;
+      const url = `${getActiveBackend()}${data.url}`;
       if (field === "cover") setEditing({ ...editing, cover_image: url });
       else setEditing({ ...editing, gallery_images: [...(editing.gallery_images || []), url] });
       toast.success("Image uploaded");
