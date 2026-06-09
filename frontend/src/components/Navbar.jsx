@@ -43,10 +43,6 @@ export default function Navbar() {
             alt="Decodiaries"
             className="h-12 md:h-14 w-auto group-hover:scale-105 transition-transform"
           />
-          <div className="hidden sm:block leading-tight border-l border-[#BFA2DB]/40 pl-3">
-            <div className="font-heading text-sm text-[#6B4F8C] font-semibold tracking-wide">Delhi NCR</div>
-            <div className="text-[10px] tracking-[0.2em] uppercase text-[#666]">Event Planner</div>
-          </div>
         </Link>
 
         <ul className="hidden lg:flex items-center gap-10">
@@ -55,7 +51,11 @@ export default function Navbar() {
               <a
                 href={l.to}
                 data-testid={`nav-${l.id}`}
-                className="text-sm uppercase tracking-[0.18em] text-[#333] hover:text-[#6B4F8C] transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 hover:after:w-full after:bg-[#6B4F8C] after:transition-all after:duration-500"
+                className={`text-sm uppercase tracking-[0.18em] transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 hover:after:w-full after:transition-all after:duration-500 ${
+                  scrolled
+                    ? "text-[#333] hover:text-[#6B4F8C] after:bg-[#6B4F8C]"
+                    : "text-white hover:text-[#BFA2DB] after:bg-[#BFA2DB] drop-shadow-md"
+                }`}
               >
                 {l.label}
               </a>
@@ -67,13 +67,17 @@ export default function Navbar() {
           <a
             href="/#contact"
             data-testid="navbar-cta"
-            className="hidden md:inline-flex items-center bg-[#6B4F8C] text-white text-sm uppercase tracking-wider px-6 py-3 rounded-full hover:bg-[#4F3A6A] hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
+            className={`hidden md:inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 ${
+              scrolled
+                ? "bg-[#6B4F8C] text-white hover:bg-[#4F3A6A]"
+                : "bg-white/95 text-[#6B4F8C] hover:bg-white"
+            }`}
           >
             Book Consultation
           </a>
           <button
             data-testid="mobile-menu-toggle"
-            className="lg:hidden text-[#6B4F8C] p-2"
+            className={`lg:hidden p-2 ${scrolled ? "text-[#6B4F8C]" : "text-white drop-shadow-md"}`}
             onClick={() => setOpen(!open)}
             aria-label="Toggle menu"
           >
