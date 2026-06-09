@@ -13,11 +13,14 @@ export default function PackageDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     api.get(`/packages/${id}`)
-      .then((r) => setPkg(r.data))
-      .catch(() => setPkg(null))
-      .finally(() => setLoading(false));
+      .then((r) => { if (!cancelled) setPkg(r.data); })
+      .catch(() => { if (!cancelled) setPkg(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     window.scrollTo(0, 0);
+    return () => { cancelled = true; };
   }, [id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-[#6B4F8C]" data-testid="pkg-detail-loading">Loading...</div>;
@@ -54,12 +57,12 @@ export default function PackageDetailPage() {
             </motion.div>
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto no-scrollbar">
-                {images.map((img, i) => (
+                {images.map((img) => (
                   <button
-                    key={i}
-                    onClick={() => setActive(i)}
-                    data-testid={`thumb-${i}`}
-                    className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden transition-all ${active === i ? "ring-2 ring-[#6B4F8C]" : "opacity-60 hover:opacity-100"}`}
+                    key={img}
+                    onClick={() => setActive(images.indexOf(img))}
+                    data-testid={`thumb-${images.indexOf(img)}`}
+                    className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden transition-all ${active === images.indexOf(img) ? "ring-2 ring-[#6B4F8C]" : "opacity-60 hover:opacity-100"}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -72,7 +75,7 @@ export default function PackageDetailPage() {
             <p className="text-xs uppercase tracking-[0.3em] text-[#6B4F8C] mb-3">{pkg.event_category}</p>
             <h1 className="font-heading text-4xl md:text-5xl text-[#6B4F8C] mb-4">{pkg.package_name}</h1>
             <div className="flex gap-1 mb-6">
-              {[...Array(5)].map((_, i) => <Star key={i} className="fill-[#BFA2DB] text-[#BFA2DB]" size={18} />)}
+              {[...Array(5)].map((_, i) => <Star key={`star-${i}`} className="fill-[#BFA2DB] text-[#BFA2DB]" size={18} />)}
             </div>
             <p className="text-[#333] leading-relaxed mb-8">{pkg.description}</p>
 
@@ -94,8 +97,8 @@ export default function PackageDetailPage() {
             <div className="mb-8">
               <h3 className="font-heading text-xl text-[#6B4F8C] mb-4">What&apos;s Included</h3>
               <ul className="space-y-3">
-                {(pkg.services || []).map((s, i) => (
-                  <li key={i} className="flex items-start gap-3 text-[#333]">
+                {(pkg.services || []).map((s) => (
+                  <li key={s} className="flex items-start gap-3 text-[#333]">
                     <Check size={18} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
                     <span>{s}</span>
                   </li>

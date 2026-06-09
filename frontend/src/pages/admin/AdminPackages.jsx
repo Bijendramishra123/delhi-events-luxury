@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Copy, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import api, { BACKEND_URL } from "../../lib/api";
@@ -17,8 +17,15 @@ export default function AdminPackages() {
   const [editing, setEditing] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  const load = () => api.get("/admin/packages").then((r) => setItems(r.data));
-  useEffect(() => { load(); }, []);
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get("/admin/packages");
+      setItems(data);
+    } catch (err) {
+      console.error("Failed to load packages:", err);
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
 
   const save = async () => {
     const payload = { ...editing, services: typeof editing.services === "string" ? editing.services.split("\n").filter(Boolean) : editing.services };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "../../lib/api";
@@ -20,15 +20,19 @@ export default function AdminLeads() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("");
 
-  const load = () => {
+  const load = useCallback(async () => {
     const params = {};
     if (q) params.q = q;
     if (filter) params.status = filter;
-    api.get("/admin/leads", { params }).then((r) => setLeads(r.data));
-  };
+    try {
+      const { data } = await api.get("/admin/leads", { params });
+      setLeads(data);
+    } catch (err) {
+      console.error("Failed to load leads:", err);
+    }
+  }, [q, filter]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); }, [q, filter]);
+  useEffect(() => { load(); }, [load]);
 
   const updateStatus = async (id, status) => {
     await api.put(`/admin/leads/${id}/status`, { status });

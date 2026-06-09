@@ -60,11 +60,13 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
           ))}
         </div>
 
-        {loading ? (
+        {loading && (
           <div className="text-center py-20 text-[#666]" data-testid="pkg-loading">Loading curated experiences...</div>
-        ) : filtered.length === 0 ? (
+        )}
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-20 text-[#666]">No packages available in this category.</div>
-        ) : (
+        )}
+        {!loading && filtered.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filtered.map((p, i) => (
               <motion.div
@@ -98,8 +100,8 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
                   <p className="text-[#666] text-sm leading-relaxed mb-5 line-clamp-2">{p.description}</p>
 
                   <ul className="space-y-2 mb-6">
-                    {(p.services || []).slice(0, 3).map((s, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-[#333]">
+                    {(p.services || []).slice(0, 3).map((s) => (
+                      <li key={s} className="flex items-start gap-2 text-sm text-[#333]">
                         <Check size={16} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
                         <span>{s}</span>
                       </li>

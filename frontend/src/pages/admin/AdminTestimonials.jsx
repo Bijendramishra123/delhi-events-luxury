@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2, X, Star } from "lucide-react";
 import { toast } from "sonner";
 import api from "../../lib/api";
@@ -10,8 +10,15 @@ export default function AdminTestimonials() {
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
 
-  const load = () => api.get("/admin/testimonials").then((r) => setItems(r.data));
-  useEffect(() => { load(); }, []);
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get("/admin/testimonials");
+      setItems(data);
+    } catch (err) {
+      console.error("Failed to load testimonials:", err);
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
 
   const save = async () => {
     const payload = { ...editing, rating: Number(editing.rating) };
@@ -41,7 +48,7 @@ export default function AdminTestimonials() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {items.map((t) => (
           <div key={t.id} className="bg-white rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" data-testid={`admin-test-${t.id}`}>
-            <div className="flex gap-1 mb-3">{[...Array(t.rating)].map((_, i) => <Star key={i} size={14} className="fill-[#BFA2DB] text-[#BFA2DB]" />)}</div>
+            <div className="flex gap-1 mb-3">{[...Array(t.rating)].map((_, i) => <Star key={`s-${t.id}-${i}`} size={14} className="fill-[#BFA2DB] text-[#BFA2DB]" />)}</div>
             <p className="text-[#333] text-sm mb-4 italic">&ldquo;{t.review}&rdquo;</p>
             <div className="flex items-center justify-between">
               <div>

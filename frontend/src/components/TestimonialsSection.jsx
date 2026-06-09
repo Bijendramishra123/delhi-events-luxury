@@ -34,7 +34,7 @@ export default function TestimonialsSection() {
               <Quote className="text-[#BFA2DB] mb-4" size={32} />
               <div className="flex gap-1 mb-4">
                 {[...Array(t.rating)].map((_, idx) => (
-                  <Star key={idx} className="fill-[#BFA2DB] text-[#BFA2DB]" size={16} />
+                  <Star key={`star-${t.id}-${idx}`} className="fill-[#BFA2DB] text-[#BFA2DB]" size={16} />
                 ))}
               </div>
               <p className="text-[#333] leading-relaxed mb-6 italic">&ldquo;{t.review}&rdquo;</p>

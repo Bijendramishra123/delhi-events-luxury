@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Users, Package, Image as ImageIcon, MessageSquare, TrendingUp, Calendar } from "lucide-react";
 import api from "../../lib/api";
 
@@ -17,9 +17,16 @@ function Card({ icon: Icon, label, value, color, testId }) {
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
 
-  useEffect(() => {
-    api.get("/admin/analytics").then((r) => setStats(r.data));
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get("/admin/analytics");
+      setStats(data);
+    } catch (err) {
+      console.error("Failed to load analytics:", err);
+    }
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   if (!stats) return <div data-testid="dashboard-loading">Loading...</div>;
 
