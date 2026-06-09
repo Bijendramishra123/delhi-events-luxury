@@ -18,7 +18,15 @@ export default api;
 
 export function buildWhatsAppLink(phone, message) {
   const encoded = encodeURIComponent(message);
-  return `https://wa.me/${phone}?text=${encoded}`;
+  // Use web.whatsapp.com directly on desktop to avoid the wa.me → api.whatsapp.com
+  // redirect, which is blocked inside the Emergent preview iframe (ERR_BLOCKED_BY_RESPONSE).
+  // On mobile devices, we still use wa.me so it deep-links into the WhatsApp app.
+  const isMobile = typeof navigator !== "undefined" &&
+    /android|iphone|ipad|ipod|iemobile|blackberry|opera mini|mobile/i.test(navigator.userAgent || "");
+  if (isMobile) {
+    return `https://wa.me/${phone}?text=${encoded}`;
+  }
+  return `https://web.whatsapp.com/send?phone=${phone}&text=${encoded}`;
 }
 
 // Opens WhatsApp in a top-level new tab so it works inside iframes (preview/embed)
