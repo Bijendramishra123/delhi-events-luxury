@@ -9,10 +9,11 @@ import GallerySection from "../components/GallerySection";
 import TestimonialsSection from "../components/TestimonialsSection";
 import ContactSection from "../components/ContactSection";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
+import FAQSection from "../components/FAQSection";  // ← Add this
 
 export default function HomePage() {
   return (
-    <div className="bg-[#F8F5F2] min-h-screen" data-testid="home-page">
+    <div className="bg-[#FAF9F6] min-h-screen" data-testid="home-page">
       <Navbar />
       <HeroSection />
       <EventsSection />
@@ -20,6 +21,7 @@ export default function HomePage() {
       <PackagesSection />
       <GallerySection />
       <TestimonialsSection />
+      <FAQSection />        {/* ← Add this - before ContactSection */}
       <ContactSection />
       <Footer />
       <FloatingWhatsApp />

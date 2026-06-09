@@ -1,9 +1,17 @@
 import axios from "axios";
 
-const PRIMARY_URL = process.env.REACT_APP_BACKEND_URL;
+// -------------------------------
+// ✅ FIXED: Hardcode local backend URL for development
+// -------------------------------
+const LOCAL_BACKEND_URL = "http://localhost:8000";
+
+// For production, you can still use env variables
+// But for local dev, we force localhost
+const PRIMARY_URL = process.env.NODE_ENV === "production" 
+  ? (process.env.REACT_APP_BACKEND_URL || LOCAL_BACKEND_URL)
+  : LOCAL_BACKEND_URL;
+
 // Optional fallback host (set REACT_APP_FALLBACK_BACKEND_URL in production env).
-// If primary backend fails with SSL / network error, axios will retry against
-// the fallback once. Leave empty to disable failover.
 const FALLBACK_URL = process.env.REACT_APP_FALLBACK_BACKEND_URL || "";
 
 let activeBackend = PRIMARY_URL;
@@ -14,6 +22,9 @@ export const API = `${PRIMARY_URL}/api`;
 const api = axios.create({
   baseURL: `${PRIMARY_URL}/api`,
   withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // Track if we've already failed over to avoid loops
@@ -49,6 +60,14 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Add request interceptor for debugging
+api.interceptors.request.use((config) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  }
+  return config;
+});
 
 export default api;
 
