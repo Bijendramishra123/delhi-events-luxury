@@ -1,9 +1,10 @@
 import axios from "axios";
 
 const PRIMARY_URL = process.env.REACT_APP_BACKEND_URL;
-// Fallback to Emergent's always-working host if primary (custom domain) fails
-// e.g. SSL handshake errors, DNS issues, Cloudflare proxy misconfig on decodiaries.com
-const FALLBACK_URL = "https://delhi-events-luxury.emergent.host";
+// Optional fallback host (set REACT_APP_FALLBACK_BACKEND_URL in production env).
+// If primary backend fails with SSL / network error, axios will retry against
+// the fallback once. Leave empty to disable failover.
+const FALLBACK_URL = process.env.REACT_APP_FALLBACK_BACKEND_URL || "";
 
 let activeBackend = PRIMARY_URL;
 
@@ -30,7 +31,7 @@ api.interceptors.response.use(
         error.message?.includes("handshake"));
 
     // If primary backend fails with network/SSL error, switch to fallback once
-    if (isNetworkError && !failedOver && activeBackend !== FALLBACK_URL) {
+    if (isNetworkError && !failedOver && FALLBACK_URL && activeBackend !== FALLBACK_URL) {
       failedOver = true;
       activeBackend = FALLBACK_URL;
       api.defaults.baseURL = `${FALLBACK_URL}/api`;
