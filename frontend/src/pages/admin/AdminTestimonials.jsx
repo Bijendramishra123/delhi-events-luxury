@@ -15,7 +15,7 @@ export default function AdminTestimonials() {
       const { data } = await api.get("/admin/testimonials");
       setItems(data);
     } catch (err) {
-      console.error("Failed to load testimonials:", err);
+      if (process.env.NODE_ENV !== "production") console.error("Failed to load testimonials:", err);
     }
   }, []);
   useEffect(() => { load(); }, [load]);

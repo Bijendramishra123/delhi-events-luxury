@@ -28,7 +28,7 @@ export default function AdminLeads() {
       const { data } = await api.get("/admin/leads", { params });
       setLeads(data);
     } catch (err) {
-      console.error("Failed to load leads:", err);
+      if (process.env.NODE_ENV !== "production") console.error("Failed to load leads:", err);
     }
   }, [q, filter]);
 

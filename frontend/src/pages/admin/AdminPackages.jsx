@@ -22,7 +22,7 @@ export default function AdminPackages() {
       const { data } = await api.get("/admin/packages");
       setItems(data);
     } catch (err) {
-      console.error("Failed to load packages:", err);
+      if (process.env.NODE_ENV !== "production") console.error("Failed to load packages:", err);
     }
   }, []);
   useEffect(() => { load(); }, [load]);

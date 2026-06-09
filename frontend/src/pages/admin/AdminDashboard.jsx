@@ -22,7 +22,7 @@ export default function AdminDashboard() {
       const { data } = await api.get("/admin/analytics");
       setStats(data);
     } catch (err) {
-      console.error("Failed to load analytics:", err);
+      if (process.env.NODE_ENV !== "production") console.error("Failed to load analytics:", err);
     }
   }, []);
 

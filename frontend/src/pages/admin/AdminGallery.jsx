@@ -16,7 +16,7 @@ export default function AdminGallery() {
       const { data } = await api.get("/admin/gallery");
       setItems(data);
     } catch (err) {
-      console.error("Failed to load gallery:", err);
+      if (process.env.NODE_ENV !== "production") console.error("Failed to load gallery:", err);
     }
   }, []);
   useEffect(() => { load(); }, [load]);

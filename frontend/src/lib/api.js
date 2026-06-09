@@ -3,15 +3,12 @@ import axios from "axios";
 export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
+// withCredentials sends the httpOnly access_token cookie set by /api/auth/login.
+// We intentionally no longer mirror the token in localStorage — that prevents
+// XSS-stealable tokens. The cookie is HttpOnly + SameSite=Lax (same-origin only).
 const api = axios.create({
   baseURL: API,
   withCredentials: true,
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("admin_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
 });
 
 export default api;
@@ -37,7 +34,6 @@ export function openWhatsApp(e, phone, message) {
   try {
     const w = window.open(url, "_blank", "noopener,noreferrer");
     if (!w) {
-      // Popup blocked — fall back to top-level navigation
       window.top.location.href = url;
     }
   } catch (err) {

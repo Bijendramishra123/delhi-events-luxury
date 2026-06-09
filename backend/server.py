@@ -254,9 +254,9 @@ async def login(payload: LoginIn, response: Response):
     token = create_access_token(user["id"], email)
     response.set_cookie(
         key="access_token", value=token, httponly=True,
-        secure=False, samesite="lax", max_age=604800, path="/"
+        secure=True, samesite="lax", max_age=604800, path="/"
     )
-    return {"id": user["id"], "email": email, "name": user.get("name", "Admin"), "token": token}
+    return {"id": user["id"], "email": email, "name": user.get("name", "Admin")}
 
 @api_router.post("/auth/logout")
 async def logout(response: Response):
@@ -512,41 +512,43 @@ async def seed_admin():
         )
         logger.info("Admin password updated")
 
-async def seed_demo_data():
-    if await db.packages.count_documents({}) > 0:
-        return
+_CATEGORY_IMAGES = [
+    ("Wedding", "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg"),
+    ("Birthday", "https://images.unsplash.com/photo-1741969494307-55394e3e4071?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwYmlydGhkYXklMjBwYXJ0eSUyMGRlY29yYXRpb25zfGVufDB8fHx8MTc4MTAwMDEzMnww&ixlib=rb-4.1.0&q=85"),
+    ("Anniversary", "https://images.unsplash.com/photo-1756190564669-215843660e93?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjBpbmRpYW4lMjB3ZWRkaW5nJTIwZGVjb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"),
+    ("Baby Shower", "https://images.pexels.com/photos/1682462/pexels-photo-1682462.jpeg"),
+    ("Corporate", "https://images.pexels.com/photos/26202153/pexels-photo-26202153.jpeg"),
+    ("Engagement", "https://images.unsplash.com/photo-1618566864264-fb013f791da4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwyfHxlbmdhZ2VtZW50JTIwcmluZyUyMGNlcmVtb255JTIwY291cGxlfGVufDB8fHx8MTc4MTAwMDEzOXww&ixlib=rb-4.1.0&q=85"),
+    ("Housewarming", "https://images.unsplash.com/photo-1649083048770-82e8ffd80431?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBob21lJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"),
+]
 
-    categories = [
-        ("Wedding", "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg"),
-        ("Birthday", "https://images.unsplash.com/photo-1741969494307-55394e3e4071?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwYmlydGhkYXklMjBwYXJ0eSUyMGRlY29yYXRpb25zfGVufDB8fHx8MTc4MTAwMDEzMnww&ixlib=rb-4.1.0&q=85"),
-        ("Anniversary", "https://images.unsplash.com/photo-1756190564669-215843660e93?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjBpbmRpYW4lMjB3ZWRkaW5nJTIwZGVjb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"),
-        ("Baby Shower", "https://images.pexels.com/photos/1682462/pexels-photo-1682462.jpeg"),
-        ("Corporate", "https://images.pexels.com/photos/26202153/pexels-photo-26202153.jpeg"),
-        ("Engagement", "https://images.unsplash.com/photo-1618566864264-fb013f791da4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwyfHxlbmdhZ2VtZW50JTIwcmluZyUyMGNlcmVtb255JTIwY291cGxlfGVufDB8fHx8MTc4MTAwMDEzOXww&ixlib=rb-4.1.0&q=85"),
-        ("Housewarming", "https://images.unsplash.com/photo-1649083048770-82e8ffd80431?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBob21lJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"),
-    ]
+_TIERS = [
+    ("Essential", 75000, 65000, [
+        "Venue Decoration", "Standard Floral Arrangements",
+        "Sound System", "Event Coordinator", "Basic Photography"
+    ]),
+    ("Premium", 175000, 159000, [
+        "Premium Venue Decoration", "Designer Floral Setup", "DJ & Live Music Coordination",
+        "Professional Photography & Video", "Dedicated Event Manager", "Custom Theme Setup",
+        "Welcome Drinks"
+    ]),
+    ("Bespoke", 450000, None, [
+        "Bespoke Venue Transformation", "Luxury Floral Installations", "Celebrity Performers Coordination",
+        "Cinematic Photography & Drone", "Full Concierge Service", "Custom Stage & Lighting",
+        "Premium Catering", "Hospitality Suites", "Welcome Hampers"
+    ]),
+]
 
-    tiers = [
-        ("Essential", 75000, 65000, [
-            "Venue Decoration", "Standard Floral Arrangements",
-            "Sound System", "Event Coordinator", "Basic Photography"
-        ]),
-        ("Premium", 175000, 159000, [
-            "Premium Venue Decoration", "Designer Floral Setup", "DJ & Live Music Coordination",
-            "Professional Photography & Video", "Dedicated Event Manager", "Custom Theme Setup",
-            "Welcome Drinks"
-        ]),
-        ("Bespoke", 450000, None, [
-            "Bespoke Venue Transformation", "Luxury Floral Installations", "Celebrity Performers Coordination",
-            "Cinematic Photography & Drone", "Full Concierge Service", "Custom Stage & Lighting",
-            "Premium Catering", "Hospitality Suites", "Welcome Hampers"
-        ]),
-    ]
 
-    order = 0
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+async def _seed_packages():
     pkgs = []
-    for cat, img in categories:
-        for tname, price, discount, services in tiers:
+    order = 0
+    for cat, img in _CATEGORY_IMAGES:
+        for tname, price, discount, services in _TIERS:
             order += 1
             pkgs.append({
                 "id": str(uuid.uuid4()),
@@ -562,29 +564,31 @@ async def seed_demo_data():
                 "featured": tname == "Premium",
                 "visible": True,
                 "display_order": order,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": _now_iso(),
+                "updated_at": _now_iso(),
             })
     await db.packages.insert_many(pkgs)
 
-    # Seed testimonials
+
+async def _seed_testimonials():
     testimonials = [
         {"id": str(uuid.uuid4()), "name": "Priya & Rohan Sharma", "rating": 5, "event_type": "Wedding",
          "review": "Absolutely magical experience! The team transformed our venue into a fairytale. Every detail was thought of — from floral arrangements to lighting. Highly recommended.",
          "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMHNtaWxpbmd8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85",
-         "visible": True, "created_at": datetime.now(timezone.utc).isoformat()},
+         "visible": True, "created_at": _now_iso()},
         {"id": str(uuid.uuid4()), "name": "Aakash Mehta", "rating": 5, "event_type": "Corporate",
-         "review": "Our annual gala was a stunning success. Professional, punctual, and creative. The Delhi NCR Event Planner team exceeded our expectations.",
+         "review": "Our annual gala was a stunning success. Professional, punctual, and creative. The Decodiaries team exceeded our expectations.",
          "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMHNtaWxpbmd8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85",
-         "visible": True, "created_at": datetime.now(timezone.utc).isoformat()},
+         "visible": True, "created_at": _now_iso()},
         {"id": str(uuid.uuid4()), "name": "Neha Kapoor", "rating": 5, "event_type": "Baby Shower",
          "review": "The most beautiful baby shower I could have asked for! Soft pastel theme, gorgeous setup, and excellent coordination. Thank you team!",
          "image": "https://images.pexels.com/photos/29086752/pexels-photo-29086752.jpeg",
-         "visible": True, "created_at": datetime.now(timezone.utc).isoformat()},
+         "visible": True, "created_at": _now_iso()},
     ]
     await db.testimonials.insert_many(testimonials)
 
-    # Seed gallery
+
+async def _seed_gallery():
     gallery_seeds = [
         ("Wedding", "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg"),
         ("Wedding", "https://images.unsplash.com/photo-1729237261091-bae8eba0c60c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHw0fHxsdXh1cnklMjBpbmRpYW4lMjB3ZWRkaW5nJTIwZGVjb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"),
@@ -596,17 +600,23 @@ async def seed_demo_data():
         ("Housewarming", "https://images.unsplash.com/photo-1649083048770-82e8ffd80431?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBob21lJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzgxMDAwMTMyfDA&ixlib=rb-4.1.0&q=85"),
         ("Wedding", "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBldmVudCUyMHZlbnVlJTIwaGFsbHxlbnwwfHx8fDE3ODEwMDAxMzl8MA&ixlib=rb-4.1.0&q=85"),
     ]
-    gdocs = []
-    for i, (cat, img) in enumerate(gallery_seeds):
-        gdocs.append({
-            "id": str(uuid.uuid4()),
-            "image": img,
-            "category": cat,
-            "title": f"{cat} Highlights",
-            "display_order": i,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-    await db.gallery.insert_many(gdocs)
+    docs = [{
+        "id": str(uuid.uuid4()),
+        "image": img,
+        "category": cat,
+        "title": f"{cat} Highlights",
+        "display_order": i,
+        "created_at": _now_iso(),
+    } for i, (cat, img) in enumerate(gallery_seeds)]
+    await db.gallery.insert_many(docs)
+
+
+async def seed_demo_data():
+    if await db.packages.count_documents({}) > 0:
+        return
+    await _seed_packages()
+    await _seed_testimonials()
+    await _seed_gallery()
     logger.info("Demo data seeded")
 
 
