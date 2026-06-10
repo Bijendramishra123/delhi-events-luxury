@@ -5,24 +5,13 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
-  { id: "home", label: "Home", hash: "" },
-  { id: "events", label: "Events", hash: "events" },
-  { id: "packages", label: "Packages", hash: "packages" },
-  { id: "gallery", label: "Gallery", hash: "gallery" },
-  { id: "testimonials", label: "Testimonials", hash: "testimonials" },
-  { id: "contact", label: "Contact", hash: "contact" },
+  { id: "home", label: "Home", path: "/", hash: "" },
+  { id: "events", label: "Events", path: "/", hash: "events" },
+  { id: "packages", label: "Packages", path: "/", hash: "packages" },
+  { id: "gallery", label: "Gallery", path: "/", hash: "gallery" },
+  { id: "testimonials", label: "Testimonials", path: "/", hash: "testimonials" },
+  { id: "contact", label: "Contact", path: "/", hash: "contact" },
 ];
-
-const navItemVariants = {
-  hidden: { opacity: 0, y: -20 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.05, duration: 0.5, ease: "easeOut" },
-  }),
-  hover: { scale: 1.05, transition: { duration: 0.2 } },
-  tap: { scale: 0.95 },
-};
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -31,83 +20,11 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Scroll to section function
-  const scrollToSection = (sectionId) => {
-    if (!sectionId || sectionId === "") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    
-    // Try to find the element
-    let element = document.getElementById(sectionId);
-    
-    // If not found, wait a bit and try again (for page navigation)
-    if (!element) {
-      setTimeout(() => {
-        element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 200);
-      return;
-    }
-    
-    element.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  // Handle click on nav link
-  const handleClick = (e, link) => {
-  e.preventDefault();
-  setOpen(false);
-
-  // Home link
-  if (!link.hash || link.hash === "") {
-    if (location.pathname !== "/") {
-      window.location.href = "/";
-    } else {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-
-    setActiveLink("home");
-    return;
-  }
-
-  // If not on home page
-  if (location.pathname !== "/") {
-    window.location.href = `/#${link.hash}`;
-    return;
-  }
-
-  // Scroll to section
-  const element = document.getElementById(link.hash);
-
-  if (element) {
-    const navbarHeight = 100;
-
-    const y =
-      element.getBoundingClientRect().top +
-      window.pageYOffset -
-      navbarHeight;
-
-    window.scrollTo({
-      top: y,
-      behavior: "smooth",
-    });
-
-    setActiveLink(link.hash);
-  }
-};
-  // Handle scroll and active link
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 30);
-      
-      // Update active link based on scroll position (only on home page)
       if (location.pathname === "/") {
-        const sections = links.map(l => l.hash).filter(h => h);
+        const sections = ["home", "events", "packages", "gallery", "testimonials", "contact"];
         for (const section of sections) {
           const element = document.getElementById(section);
           if (element) {
@@ -120,24 +37,51 @@ export default function Navbar() {
         }
       }
     };
-    
     window.addEventListener("scroll", onScroll);
-    // Trigger once on mount
-    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, [location.pathname]);
 
-  // Handle hash on page load and navigation
   useEffect(() => {
     if (location.hash && location.pathname === "/") {
       const hash = location.hash.substring(1);
-      // Wait for DOM to be fully rendered
       setTimeout(() => {
-        scrollToSection(hash);
-        setActiveLink(hash);
-      }, 300);
+        const element = document.getElementById(hash);
+        if (element) element.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
   }, [location]);
+
+  const scrollToSection = (hash) => {
+    if (hash === "") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const element = document.getElementById(hash);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleClick = (e, link) => {
+    e.preventDefault();
+    setOpen(false);
+    
+    if (link.hash === "") {
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+      if (location.pathname !== "/") {
+        navigate(`/#${link.hash}`);
+        setTimeout(() => scrollToSection(link.hash), 200);
+      } else {
+        scrollToSection(link.hash);
+      }
+    }
+  };
 
   const navClass = `fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
     scrolled 
@@ -146,130 +90,84 @@ export default function Navbar() {
   }`;
 
   return (
-    <nav className={navClass} data-testid="navbar">
+    <nav className={navClass}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
-        <button
-          onClick={() => {
-            if (location.pathname !== "/") {
-              navigate("/");
-            }
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            setOpen(false);
-          }}
-          className="flex items-center gap-3 group focus:outline-none"
+        <Link 
+          to="/" 
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="flex items-center gap-3 group"
         >
-          <motion.img
-            src="/assets/logo.png"
-            alt="Decodiaries"
-            className="h-12 md:h-14 w-auto"
-            whileHover={{ scale: 1.05, rotate: 2 }}
-            transition={{ duration: 0.3 }}
-          />
-        </button>
+          <img src="/assets/logo.png" alt="Decodiaries" className="h-12 md:h-14 w-auto" />
+        </Link>
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8">
-          {links.map((l, index) => (
-            <motion.li
-              key={l.id}
-              custom={index}
-              initial="hidden"
-              animate="visible"
-              variants={navItemVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <button
-                onClick={(e) => handleClick(e, l)}
-                className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition-all duration-300 px-2 py-1 cursor-pointer focus:outline-none ${
-                  activeLink === l.hash && location.pathname === "/" && l.hash !== ""
+          {links.map((link) => (
+            <li key={link.id}>
+              <a
+                href={link.hash ? `/#${link.hash}` : "/"}
+                onClick={(e) => handleClick(e, link)}
+                className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition-all duration-300 px-2 py-1 ${
+                  activeLink === link.id && location.pathname === "/"
                     ? "text-[#6B4F8C]"
                     : "text-gray-700 hover:text-[#6B4F8C]"
                 }`}
               >
-                {l.label}
-                <motion.span
-                  className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#6B4F8C] to-[#BFA2DB] rounded-full transition-all duration-300 ${
-                    activeLink === l.hash && location.pathname === "/" && l.hash !== "" ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
-                />
-                <span className="absolute inset-0 rounded-lg bg-[#6B4F8C]/0 transition-all duration-300 hover:bg-[#6B4F8C]/5 -z-10" />
-              </button>
-            </motion.li>
+                {link.label}
+                <span className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#6B4F8C] to-[#BFA2DB] rounded-full transition-all duration-300 ${
+                  activeLink === link.id && location.pathname === "/" ? "w-full" : "w-0 group-hover:w-full"
+                }`} />
+              </a>
+            </li>
           ))}
         </ul>
 
-        {/* Desktop CTA */}
+        {/* CTA */}
         <div className="hidden lg:flex items-center gap-3">
-          <motion.button
+          <button
             onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })}
-            className="inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md transition-all duration-300 bg-[#6B4F8C] text-white hover:bg-[#4F3A6A] cursor-pointer focus:outline-none"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md transition-all duration-300 bg-[#6B4F8C] text-white hover:bg-[#4F3A6A]"
           >
             Book Consultation
-          </motion.button>
+          </button>
         </div>
 
-        {/* Mobile menu button */}
-        <motion.button
-          className={`lg:hidden p-2 rounded-lg transition-colors duration-300 focus:outline-none ${
-            scrolled ? "text-[#6B4F8C] hover:bg-gray-100" : "text-[#6B4F8C] hover:bg-gray-100"
-          }`}
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-          whileTap={{ scale: 0.9 }}
-        >
+        {/* Mobile Menu Button */}
+        <button onClick={() => setOpen(!open)} className="lg:hidden p-2 rounded-lg text-gray-700">
           {open ? <X size={24} /> : <Menu size={24} />}
-        </motion.button>
+        </button>
       </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -20, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -20, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden bg-white border-t border-[#6B4F8C]/20 px-6 py-6 shadow-lg max-h-[80vh] overflow-y-auto"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-white border-t border-[#6B4F8C]/20 px-6 py-6 shadow-lg"
           >
             <ul className="flex flex-col gap-3">
-              {links.map((l, idx) => (
-                <motion.li
-                  key={l.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <button
-                    onClick={(e) => handleClick(e, l)}
-                    className={`block w-full text-left text-gray-700 text-sm uppercase tracking-wider py-3 px-4 rounded-lg transition-all duration-300 cursor-pointer focus:outline-none ${
-                      activeLink === l.hash && location.pathname === "/" && l.hash !== ""
-                        ? "bg-[#6B4F8C]/10 text-[#6B4F8C] font-semibold"
-                        : "hover:bg-gray-50 hover:text-[#6B4F8C]"
-                    }`}
+              {links.map((link) => (
+                <li key={link.id}>
+                  <a
+                    href={link.hash ? `/#${link.hash}` : "/"}
+                    onClick={(e) => handleClick(e, link)}
+                    className="block text-gray-700 text-sm uppercase tracking-wider py-3 px-4 rounded-lg hover:bg-gray-50"
                   >
-                    {l.label}
-                  </button>
-                </motion.li>
+                    {link.label}
+                  </a>
+                </li>
               ))}
-              <motion.li
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: links.length * 0.05 }}
-              >
+              <li>
                 <button
-                  onClick={(e) => {
-                    handleClick(e, { hash: "contact" });
-                    setOpen(false);
-                  }}
-                  className="inline-block w-full text-center bg-[#6B4F8C] text-white px-6 py-3 rounded-full text-sm uppercase tracking-wider mt-3 shadow-md hover:bg-[#4F3A6A] transition-all duration-300 cursor-pointer focus:outline-none"
+                  onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })}
+                  className="w-full text-center bg-[#6B4F8C] text-white px-6 py-3 rounded-full text-sm uppercase tracking-wider mt-3"
                 >
                   Book Consultation
                 </button>
-              </motion.li>
+              </li>
             </ul>
           </motion.div>
         )}
