@@ -425,8 +425,17 @@ async def login(payload: LoginIn, response: Response):
 
 @api_router.post("/auth/logout")
 async def logout(response: Response):
-    response.delete_cookie(key="access_token", path="/")
-    return {"success": True}
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        secure=True,
+        samesite="none"
+    )
+
+    return {
+        "success": True,
+        "message": "Logged out successfully"
+    }
 
 @api_router.get("/auth/me")
 async def me(user=Depends(get_current_admin)):
