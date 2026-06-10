@@ -326,7 +326,20 @@ api_router = APIRouter(prefix="/api")
 # ---------- Public Routes ----------
 @api_router.get("/")
 async def root():
-    return {"message": "Delhi NCR Event Planner API"}
+    return {
+        "message": "Delhi Events API is running 🎉",
+        "status": "healthy",
+        "version": "1.0.0",
+        "endpoints": {
+            "packages": "/api/packages",
+            "gallery": "/api/gallery",
+            "testimonials": "/api/testimonials",
+            "leads": "/api/leads",
+            "admin": "/api/admin",
+            "docs": "/docs",
+            "redoc": "/redoc"
+        }
+    }
 
 @api_router.get("/settings")
 async def get_settings():
@@ -634,6 +647,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://localhost:8000",
+        "https://delhi-events-backend.onrender.com",
+        "https://delhi-events-luxury.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
