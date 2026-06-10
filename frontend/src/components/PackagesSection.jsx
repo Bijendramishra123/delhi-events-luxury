@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { MessageCircle, ArrowRight, Check, X, Send, Phone, Mail, Calendar, MapPin, DollarSign } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { MessageCircle, ArrowRight, Check, Send } from "lucide-react";
 import api, { buildWhatsAppLink, formatPrice } from "../lib/api";
 
 const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
@@ -25,19 +25,7 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
   const [packages, setPackages] = useState([]);
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(true);
-  const [showInquiryModal, setShowInquiryModal] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState(null);
-  const [inquiryForm, setInquiryForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    event_date: "",
-    location: "",
-    budget: "",
-    message: ""
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get("/packages").then((r) => setPackages(r.data)).finally(() => setLoading(false));
@@ -45,47 +33,22 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
 
   const filtered = filter === "All" ? packages : packages.filter((p) => p.event_category === filter);
 
-  const openInquiryModal = (pkg) => {
-    setSelectedPackage(pkg);
-    setShowInquiryModal(true);
-    setInquiryForm({
-      name: "",
-      phone: "",
-      email: "",
-      event_date: "",
-      location: "",
-      budget: "",
-      message: `I'm interested in the "${pkg.package_name}" package. Please contact me with more details.`
-    });
-    setSubmitSuccess(false);
-  };
-
-  const handleInquirySubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    
-    try {
-      await api.post("/leads", {
-        name: inquiryForm.name,
-        phone: inquiryForm.phone,
-        email: inquiryForm.email,
-        event_type: selectedPackage?.event_category,
-        event_date: inquiryForm.event_date,
-        location: inquiryForm.location,
-        budget: inquiryForm.budget,
-        message: inquiryForm.message
-      });
-      setSubmitSuccess(true);
-      setTimeout(() => {
-        setShowInquiryModal(false);
-        setSubmitSuccess(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Inquiry submission failed:", error);
-      alert("Failed to send inquiry. Please try again or WhatsApp us directly.");
-    } finally {
-      setSubmitting(false);
-    }
+  const handleInquiryClick = (pkg) => {
+    // Store package info in sessionStorage to pre-fill contact form
+    sessionStorage.setItem("inquiryPackage", JSON.stringify({
+      name: pkg.package_name,
+      category: pkg.event_category,
+      price: pkg.price
+    }));
+    // Navigate to contact page
+    navigate("/#contact");
+    // Scroll to contact section after navigation
+    setTimeout(() => {
+      const contactSection = document.getElementById("contact");
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
   };
 
   return (
@@ -187,12 +150,11 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
                         View Details <ArrowRight size={14} />
                       </Link>
                       <button
-                        onClick={() => openInquiryModal(p)}
+                        onClick={() => handleInquiryClick(p)}
                         data-testid={`pkg-inquiry-${p.id}`}
-                        className="inline-flex items-center justify-center bg-[#25D366] text-white p-3 rounded-full hover:scale-105 transition-transform"
-                        aria-label="Send Inquiry"
+                        className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-3 rounded-full hover:scale-105 transition-transform text-sm uppercase tracking-wider"
                       >
-                        <Send size={18} />
+                        <Send size={16} /> Send Inquiry
                       </button>
                     </div>
                   </div>
@@ -202,143 +164,6 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
           </div>
         )}
       </div>
-
-      {/* Inquiry Modal */}
-      <AnimatePresence>
-        {showInquiryModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowInquiryModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="sticky top-0 bg-white p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="font-heading text-xl md:text-2xl text-[#6B4F8C]">
-                  Inquire About: {selectedPackage?.package_name}
-                </h2>
-                <button
-                  onClick={() => setShowInquiryModal(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full transition"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {submitSuccess ? (
-                <div className="p-6 text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check size={32} className="text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-heading text-green-600 mb-2">Inquiry Sent!</h3>
-                  <p className="text-gray-600">We'll get back to you shortly.</p>
-                </div>
-              ) : (
-                <form onSubmit={handleInquirySubmit} className="p-4 md:p-6 space-y-4">
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={inquiryForm.name}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, name: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
-                      placeholder="Your full name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Phone *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={inquiryForm.phone}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, phone: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
-                      placeholder="Your phone number"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={inquiryForm.email}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
-                      placeholder="your@email.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Event Date</label>
-                    <input
-                      type="date"
-                      value={inquiryForm.event_date}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, event_date: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Location</label>
-                    <input
-                      type="text"
-                      value={inquiryForm.location}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, location: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
-                      placeholder="Event location"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Budget (₹)</label>
-                    <input
-                      type="text"
-                      value={inquiryForm.budget}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, budget: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
-                      placeholder="Expected budget"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Message</label>
-                    <textarea
-                      rows={3}
-                      value={inquiryForm.message}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, message: e.target.value })}
-                      className="w-full border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C] resize-none"
-                      placeholder="Any specific requirements?"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full bg-[#6B4F8C] text-white py-3 rounded-full hover:bg-[#4F3A6A] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {submitting ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    ) : (
-                      <>
-                        <Send size={18} /> Send Inquiry
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }
