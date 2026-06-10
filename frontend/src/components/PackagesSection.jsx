@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { MessageCircle, ArrowRight, Check } from "lucide-react";
 import api, { buildWhatsAppLink, openWhatsApp, formatPrice } from "../lib/api";
 
-const CATEGORIES = ["All", "Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming"];
+const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
 
 function AvailabilityBadge({ status }) {
   const map = {
@@ -32,7 +33,7 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
   const filtered = filter === "All" ? packages : packages.filter((p) => p.event_category === filter);
 
   return (
-    <section id="packages" className="py-24 md:py-32 bg-[#F8F5F2]" data-testid="packages-section">
+    <section id="packages" className="py-24 md:py-32 bg-[#FAF9F6]" data-testid="packages-section">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12">
           <div className="max-w-2xl">
