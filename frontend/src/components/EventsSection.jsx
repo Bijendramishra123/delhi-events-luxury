@@ -1,35 +1,36 @@
+
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Heart, Leaf, Sparkles, CheckCircle, MessageCircle, Users, Settings, PartyPopper } from "lucide-react";
+import { ArrowUpRight, Heart, Leaf, Sparkles, CheckCircle, MessageCircle, Users, Settings, PartyPopper, Cake, Baby, Flower2, Music, Gem, Home } from "lucide-react";
 
-// New Categories for "What We Decorate"
+// New Categories for "What We Decorate" - with icons instead of emojis
 const DECORATE_CATEGORIES = [
   {
-    emoji: "🎂",
+    icon: <Cake className="w-10 h-10" />,
     name: "Birthday",
     description: "Balloon arches, themed setups, photo backdrops — we turn your birthday into a whole aesthetic.",
     color: "from-pink-500 to-orange-400",
   },
   {
-    emoji: "🍼",
+    icon: <Baby className="w-10 h-10" />,
     name: "Baby Shower",
     description: "Soft pastels, dreamy drapes, and sweet little details to welcome the newest love.",
     color: "from-blue-400 to-purple-400",
   },
   {
-    emoji: "🌼",
+    icon: <Flower2 className="w-10 h-10" />,
     name: "Haldi",
     description: "Marigold magic, bright florals, and joyful setups to celebrate the pre-wedding glow.",
     color: "from-yellow-500 to-orange-500",
   },
   {
-    emoji: "✨",
+    icon: <Music className="w-10 h-10" />,
     name: "Sangeet",
     description: "Fairy lights, floral curtains, and statement backdrops for a night of music and memories.",
     color: "from-purple-500 to-pink-500",
   },
   {
-    emoji: "💍",
+    icon: <Gem className="w-10 h-10" />,
     name: "Anniversary",
     description: "Romantic, refined, and intimate — decor that celebrates years of togetherness.",
     color: "from-red-400 to-rose-400",
@@ -177,17 +178,17 @@ export default function EventsSection() {
               <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
               <div className="relative z-10">
                 <motion.div 
-                  className="text-5xl mb-4 inline-block"
-                  whileHover={{ scale: 1.2, rotate: 10 }}
+                  className="w-16 h-16 rounded-xl bg-[#6B4F8C]/10 flex items-center justify-center text-[#6B4F8C] mb-4 mx-auto group-hover:bg-[#6B4F8C] group-hover:text-white transition-all duration-300"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  {cat.emoji}
+                  {cat.icon}
                 </motion.div>
-                <h3 className="text-xl font-heading text-[#6B4F8C] mb-3">{cat.name}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">{cat.description}</p>
+                <h3 className="text-xl font-heading text-[#6B4F8C] mb-3 text-center">{cat.name}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed mb-4 text-center">{cat.description}</p>
                 <motion.a
                   href="#packages"
-                  className="inline-flex items-center gap-1 text-[#6B4F8C] text-sm font-medium hover:gap-2 transition-all"
+                  className="inline-flex items-center justify-center gap-1 text-[#6B4F8C] text-sm font-medium hover:gap-2 transition-all w-full"
                   whileHover={{ x: 5 }}
                 >
                   Explore <ArrowUpRight size={14} />
