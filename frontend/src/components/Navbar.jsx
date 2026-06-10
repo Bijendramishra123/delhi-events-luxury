@@ -4,36 +4,89 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const navLinks = [
-  { name: "Home", href: "/", hash: "" },
-  { name: "Events", href: "/", hash: "events" },
-  { name: "Packages", href: "/", hash: "packages" },
-  { name: "Gallery", href: "/", hash: "gallery" },
-  { name: "Testimonials", href: "/", hash: "testimonials" },
-  { name: "Contact", href: "/", hash: "contact" },
+const links = [
+  { id: "home", label: "Home", path: "/", hash: "" },
+  { id: "events", label: "Events", path: "/", hash: "events" },
+  { id: "packages", label: "Packages", path: "/", hash: "packages" },
+  { id: "gallery", label: "Gallery", path: "/", hash: "gallery" },
+  { id: "testimonials", label: "Testimonials", path: "/", hash: "testimonials" },
+  { id: "contact", label: "Contact", path: "/", hash: "contact" },
 ];
 
+const navItemVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.05, duration: 0.5, ease: "easeOut" },
+  }),
+  hover: { scale: 1.05, transition: { duration: 0.2 } },
+  tap: { scale: 0.95 },
+};
+
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeLink, setActiveLink] = useState("Home");
+  const [open, setOpen] = useState(false);
+  const [activeLink, setActiveLink] = useState("home");
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Handle scroll effect
+  // Scroll to section function
+  const scrollToSection = (sectionId) => {
+    if (sectionId === "") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    }
+    return false;
+  };
+
+  // Handle click on nav link
+  const handleClick = (e, link) => {
+    e.preventDefault();
+    setOpen(false);
+    
+    // If home link
+    if (link.hash === "") {
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      return;
+    }
+    
+    // If on home page, scroll to section
+    if (location.pathname === "/") {
+      scrollToSection(link.hash);
+    } else {
+      // Navigate to home page with hash
+      navigate(`/#${link.hash}`);
+      setTimeout(() => {
+        scrollToSection(link.hash);
+      }, 200);
+    }
+  };
+
+  // Handle scroll and active link
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 30);
       
       // Update active link based on scroll position (only on home page)
       if (location.pathname === "/") {
-        const sections = navLinks.map(link => link.hash).filter(h => h);
+        const sections = links.map(l => l.hash).filter(h => h);
         for (const section of sections) {
           const element = document.getElementById(section);
           if (element) {
             const rect = element.getBoundingClientRect();
-            if (rect.top <= 100 && rect.bottom >= 100) {
-              setActiveLink(section.charAt(0).toUpperCase() + section.slice(1));
+            if (rect.top <= 120 && rect.bottom >= 120) {
+              setActiveLink(section);
               break;
             }
           }
@@ -41,56 +94,19 @@ export default function Navbar() {
       }
     };
     
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, [location.pathname]);
 
-  // Handle hash navigation after route change
+  // Handle hash on page load
   useEffect(() => {
     if (location.hash && location.pathname === "/") {
       const hash = location.hash.substring(1);
-      const element = document.getElementById(hash);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
+      setTimeout(() => {
+        scrollToSection(hash);
+      }, 200);
     }
   }, [location]);
-
-  const scrollToSection = (hash) => {
-    if (location.pathname !== "/") {
-      // Navigate to home page first, then scroll
-      navigate("/");
-      setTimeout(() => {
-        const element = document.getElementById(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 100);
-    } else {
-      // Already on home page, just scroll
-      const element = document.getElementById(hash);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
-
-  const handleClick = (e, link) => {
-    e.preventDefault();
-    setIsOpen(false);
-    
-    if (link.hash === "") {
-      // Home link
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      if (location.pathname !== "/") {
-        navigate("/");
-      }
-    } else {
-      scrollToSection(link.hash);
-    }
-  };
 
   const navClass = `fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
     scrolled 
@@ -104,106 +120,134 @@ export default function Navbar() {
         {/* Logo */}
         <Link 
           to="/" 
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="flex items-center gap-3 group"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         >
-          <img
+          <motion.img
             src="/assets/logo.png"
             alt="Decodiaries"
-            className="h-12 md:h-14 w-auto group-hover:scale-105 transition-transform duration-300"
+            className="h-12 md:h-14 w-auto"
+            whileHover={{ scale: 1.05, rotate: 2 }}
+            transition={{ duration: 0.3 }}
           />
         </Link>
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <li key={link.name}>
+          {links.map((l, index) => (
+            <motion.li
+              key={l.id}
+              custom={index}
+              initial="hidden"
+              animate="visible"
+              variants={navItemVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
               <a
-                href={link.hash ? `/#${link.hash}` : "/"}
-                onClick={(e) => handleClick(e, link)}
-                className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition-all duration-300 px-2 py-1 ${
-                  activeLink === link.name && location.pathname === "/"
+                href={l.hash ? `/#${l.hash}` : "/"}
+                onClick={(e) => handleClick(e, l)}
+                className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition-all duration-300 px-2 py-1 cursor-pointer ${
+                  activeLink === l.hash && location.pathname === "/" && l.hash !== ""
                     ? "text-[#6B4F8C]"
                     : "text-gray-700 hover:text-[#6B4F8C]"
                 }`}
               >
-                {link.name}
-                <span
+                {l.label}
+                <motion.span
                   className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#6B4F8C] to-[#BFA2DB] rounded-full transition-all duration-300 ${
-                    activeLink === link.name && location.pathname === "/" ? "w-full" : "w-0 group-hover:w-full"
+                    activeLink === l.hash && location.pathname === "/" && l.hash !== "" ? "w-full" : "w-0 group-hover:w-full"
                   }`}
                 />
+                <span className="absolute inset-0 rounded-lg bg-[#6B4F8C]/0 transition-all duration-300 group-hover:bg-[#6B4F8C]/5 -z-10" />
               </a>
-            </li>
+            </motion.li>
           ))}
         </ul>
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
-          <a
+          <motion.a
             href="/#contact"
             onClick={(e) => {
               e.preventDefault();
-              scrollToSection("contact");
+              if (location.pathname === "/") {
+                scrollToSection("contact");
+              } else {
+                navigate("/#contact");
+                setTimeout(() => scrollToSection("contact"), 200);
+              }
             }}
-            className="inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md transition-all duration-300 bg-[#6B4F8C] text-white hover:bg-[#4F3A6A] hover:scale-105"
+            className="inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md transition-all duration-300 bg-[#6B4F8C] text-white hover:bg-[#4F3A6A]"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             Book Consultation
-          </a>
+          </motion.a>
         </div>
 
         {/* Mobile menu button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="lg:hidden p-2 rounded-lg text-gray-700 hover:text-[#6B4F8C] hover:bg-gray-100 transition-all duration-300"
+        <motion.button
+          className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${
+            scrolled ? "text-[#6B4F8C] hover:bg-gray-100" : "text-[#6B4F8C] hover:bg-gray-100"
+          }`}
+          onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
+          whileTap={{ scale: 0.9 }}
         >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+          {open ? <X size={24} /> : <Menu size={24} />}
+        </motion.button>
       </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>
-        {isOpen && (
+        {open && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, y: -20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -20, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden bg-white border-t border-[#6B4F8C]/20 px-6 py-6 shadow-lg"
+            className="lg:hidden bg-white border-t border-[#6B4F8C]/20 px-6 py-6 shadow-lg max-h-[80vh] overflow-y-auto"
           >
-            <ul className="flex flex-col gap-4">
-              {navLinks.map((link, idx) => (
+            <ul className="flex flex-col gap-3">
+              {links.map((l, idx) => (
                 <motion.li
-                  key={link.name}
+                  key={l.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
                   <a
-                    href={link.hash ? `/#${link.hash}` : "/"}
-                    onClick={(e) => handleClick(e, link)}
-                    className={`block text-gray-700 text-sm uppercase tracking-wider py-2 px-2 rounded-lg transition-all duration-300 hover:bg-gray-50 hover:text-[#6B4F8C] ${
-                      activeLink === link.name && location.pathname === "/" ? "text-[#6B4F8C] font-semibold" : ""
+                    href={l.hash ? `/#${l.hash}` : "/"}
+                    onClick={(e) => handleClick(e, l)}
+                    className={`block text-gray-700 text-sm uppercase tracking-wider py-3 px-4 rounded-lg transition-all duration-300 cursor-pointer ${
+                      activeLink === l.hash && location.pathname === "/" && l.hash !== ""
+                        ? "bg-[#6B4F8C]/10 text-[#6B4F8C] font-semibold"
+                        : "hover:bg-gray-50 hover:text-[#6B4F8C]"
                     }`}
                   >
-                    {link.name}
+                    {l.label}
                   </a>
                 </motion.li>
               ))}
               <motion.li
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: links.length * 0.05 }}
               >
                 <a
                   href="/#contact"
                   onClick={(e) => {
                     e.preventDefault();
-                    scrollToSection("contact");
-                    setIsOpen(false);
+                    setOpen(false);
+                    if (location.pathname === "/") {
+                      scrollToSection("contact");
+                    } else {
+                      navigate("/#contact");
+                      setTimeout(() => scrollToSection("contact"), 200);
+                    }
                   }}
-                  className="block text-center bg-[#6B4F8C] text-white px-4 py-3 rounded-full text-sm uppercase tracking-wider mt-3 shadow-md hover:bg-[#4F3A6A] transition-all duration-300"
+                  className="inline-block w-full text-center bg-[#6B4F8C] text-white px-6 py-3 rounded-full text-sm uppercase tracking-wider mt-3 shadow-md hover:bg-[#4F3A6A] transition-all duration-300 cursor-pointer"
                 >
                   Book Consultation
                 </a>
