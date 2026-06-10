@@ -34,28 +34,30 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    // First, clear all local state
-    setUser(null);
-    
-    // Clear all storage
+    // Clear all storage first
     localStorage.clear();
     sessionStorage.clear();
     
     // Clear cookies
-    document.cookie.split(";").forEach(function(c) {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i];
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
     
-    // Try to call logout API (don't wait for it)
+    // Clear user state
+    setUser(null);
+    
+    // Call logout API (ignore result)
     try {
       await api.post("/auth/logout");
     } catch (err) {
-      if (isDev) console.warn("Logout API failed:", err?.response?.status);
+      // Ignore API error
     }
     
-    // Force page reload to clear all React state
+    // Force redirect to login page
     window.location.href = "/admin/login";
   }, []);
 

@@ -1,26 +1,28 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function AdminLoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, loading: authLoading } = useAuth();
+  const [loggingIn, setLoggingIn] = useState(false);
 
-  // Auto login without credentials
-  React.useEffect(() => {
-    const autoLogin = async () => {
-      try {
-        await login("admin@decodiaries.com", "admin123");
-      } catch (err) {
+  useEffect(() => {
+    if (!user && !loggingIn && !authLoading) {
+      setLoggingIn(true);
+      login("admin@decodiaries.com", "admin123").catch((err) => {
         console.error("Auto login failed:", err);
-      }
-    };
-    autoLogin();
-  }, [login]);
+        setLoggingIn(false);
+      });
+    }
+  }, [user, login, authLoading, loggingIn]);
 
-  if (user) return <Navigate to="/admin" replace />;
+  // If already logged in, redirect to dashboard
+  if (user) {
+    return <Navigate to="/admin" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F5F2] to-[#FAF9F6] flex items-center justify-center px-4 py-8">
@@ -35,7 +37,9 @@ export default function AdminLoginPage() {
             <Sparkles className="w-10 h-10 text-white" />
           </div>
           <h1 className="font-heading text-2xl md:text-3xl text-[#6B4F8C] mb-2">Admin Panel</h1>
-          <p className="text-gray-500 text-sm mb-6">Redirecting to dashboard...</p>
+          <p className="text-gray-500 text-sm mb-6">
+            {loggingIn ? "Logging in..." : "Redirecting to dashboard..."}
+          </p>
           
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B4F8C] mx-auto"></div>
         </div>
