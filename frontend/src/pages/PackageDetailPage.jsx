@@ -7,32 +7,33 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api, { buildWhatsAppLink, openWhatsApp, formatPrice } from "../lib/api";
 
-// Toast Component
+// Mobile-Optimized Toast Component
 const ToastNotification = ({ message, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => onClose(), 3000);
+    const timer = setTimeout(() => onClose(), 3500);
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -50, scale: 0.9 }}
+      initial={{ opacity: 0, y: -80, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -50, scale: 0.9 }}
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md"
+      exit={{ opacity: 0, y: -80, scale: 0.9 }}
+      transition={{ type: "spring", damping: 20 }}
+      className="fixed top-4 left-4 right-4 z-50 md:left-1/2 md:right-auto md:-translate-x-1/2 md:min-w-[380px] md:max-w-md"
     >
-      <div className="bg-[#6B4F8C] text-white rounded-xl shadow-2xl p-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <Send size={16} className="text-white" />
+      <div className="bg-gradient-to-r from-[#6B4F8C] to-[#8B6FAC] text-white rounded-2xl shadow-2xl p-4 flex items-center justify-between gap-3 border border-white/20">
+        <div className="flex items-start gap-3 flex-1">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Send size={18} className="text-white" />
           </div>
-          <div>
-            <p className="text-sm font-semibold">{message}</p>
-            <p className="text-xs text-white/80">Redirecting you to contact section...</p>
+          <div className="flex-1">
+            <p className="text-sm md:text-base font-semibold leading-tight">{message}</p>
+            <p className="text-xs text-white/80 mt-0.5">✨ Redirecting you to contact section...</p>
           </div>
         </div>
-        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition">
-          <X size={14} />
+        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition active:scale-95 flex-shrink-0">
+          <X size={16} />
         </button>
       </div>
     </motion.div>
@@ -99,7 +100,6 @@ export default function PackageDetailPage() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Images Gallery */}
           <div>
             <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-white">
               <img src={images[active]} alt={pkg.package_name} className="w-full h-full object-cover" />
@@ -115,7 +115,6 @@ export default function PackageDetailPage() {
             )}
           </div>
 
-          {/* Details */}
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#6B4F8C] mb-2">{pkg.event_category}</p>
             <h1 className="font-heading text-3xl md:text-4xl text-[#6B4F8C] mb-3">{pkg.package_name}</h1>

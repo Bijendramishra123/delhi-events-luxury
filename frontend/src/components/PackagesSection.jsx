@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Send, Sparkles, X } from "lucide-react";
 import api, { formatPrice } from "../lib/api";
@@ -50,37 +50,38 @@ function AvailabilityBadge({ status }) {
   );
 }
 
-// Toast Notification Component
+// Mobile-Optimized Toast Notification Component
 const ToastNotification = ({ message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 3000);
+    }, 3500);
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -50, scale: 0.9 }}
+      initial={{ opacity: 0, y: -80, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -50, scale: 0.9 }}
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md"
+      exit={{ opacity: 0, y: -80, scale: 0.9 }}
+      transition={{ type: "spring", damping: 20, stiffness: 300 }}
+      className="fixed top-4 left-4 right-4 z-50 md:left-1/2 md:right-auto md:-translate-x-1/2 md:min-w-[380px] md:max-w-md"
     >
-      <div className="bg-[#6B4F8C] text-white rounded-xl shadow-2xl p-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <Send size={16} className="text-white" />
+      <div className="bg-gradient-to-r from-[#6B4F8C] to-[#8B6FAC] text-white rounded-2xl shadow-2xl p-4 flex items-center justify-between gap-3 border border-white/20">
+        <div className="flex items-start gap-3 flex-1">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <Send size={18} className="text-white" />
           </div>
-          <div>
-            <p className="text-sm font-semibold">{message}</p>
-            <p className="text-xs text-white/80">Redirecting you to contact section...</p>
+          <div className="flex-1">
+            <p className="text-sm md:text-base font-semibold leading-tight">{message}</p>
+            <p className="text-xs text-white/80 mt-0.5">✨ Redirecting you to contact section...</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition active:scale-95"
+          className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition active:scale-95 flex-shrink-0"
         >
-          <X size={14} />
+          <X size={16} />
         </button>
       </div>
     </motion.div>
@@ -107,18 +108,15 @@ export default function PackagesSection() {
   const hasMore = filtered.length > visibleCount;
 
   const handleInquiry = (pkg) => {
-    // Show toast notification
-    setToastMessage(`✨ "${pkg.package_name}" selected! Please fill the contact form below.`);
+    setToastMessage(`✨ "${pkg.package_name}"`);
     setShowToast(true);
     
-    // Store package info in sessionStorage
     sessionStorage.setItem("inquiryPackage", JSON.stringify({
       name: pkg.package_name,
       category: pkg.event_category,
       price: pkg.price
     }));
     
-    // Navigate to contact section after short delay
     setTimeout(() => {
       navigate("/");
       setTimeout(() => {
@@ -157,8 +155,10 @@ export default function PackagesSection() {
 
   return (
     <section id="packages" className="py-12 md:py-20 lg:py-24 bg-[#FAF9F6] relative">
-      {/* Toast Notification */}
-      {showToast && <ToastNotification message={toastMessage} onClose={closeToast} />}
+      {/* Toast Notification - Fixed position */}
+      <AnimatePresence>
+        {showToast && <ToastNotification message={`✨ ${toastMessage} selected! Please fill the contact form below.`} onClose={closeToast} />}
+      </AnimatePresence>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
@@ -201,14 +201,12 @@ export default function PackagesSection() {
               transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
               className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] touch-manipulation"
             >
-              {/* Image */}
               <LazyImage
                 src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"}
                 alt={p.package_name}
                 className="w-full h-full object-cover"
               />
               
-              {/* Content */}
               <div className="p-3 md:p-5">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-[10px] md:text-xs uppercase tracking-wide text-[#6B4F8C]/70 font-medium">{p.event_category}</span>
@@ -218,7 +216,6 @@ export default function PackagesSection() {
                 <h3 className="font-heading text-base md:text-xl text-[#6B4F8C] font-semibold mb-1 line-clamp-1">{p.package_name}</h3>
                 <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-3 line-clamp-2">{p.description}</p>
 
-                {/* Services Preview */}
                 <ul className="space-y-1 mb-3">
                   {(p.services || []).slice(0, 2).map((s) => (
                     <li key={s} className="flex items-start gap-1.5 text-xs text-gray-600">
@@ -231,7 +228,6 @@ export default function PackagesSection() {
                   )}
                 </ul>
 
-                {/* Price and Buttons */}
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <div className="flex items-baseline gap-2 mb-3">
                     <span className="text-[10px] text-gray-400">Starting at</span>
