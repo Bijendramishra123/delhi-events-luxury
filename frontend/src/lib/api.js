@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const getApiUrl = () => {
@@ -39,6 +40,10 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export function getActiveBackend() {
+  return API_URL;
+}
 
 export function buildWhatsAppLink(phone, message) {
   const encoded = encodeURIComponent(message);
