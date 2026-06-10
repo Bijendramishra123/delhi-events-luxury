@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { MessageCircle, ArrowRight, Check, Send, Sparkles } from "lucide-react";
-import api, { buildWhatsAppLink, formatPrice } from "../lib/api";
+import { ArrowRight, Check, Send, Sparkles } from "lucide-react";
+import api, { formatPrice } from "../lib/api";
 
 const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
 
@@ -11,7 +11,7 @@ const LazyImage = ({ src, alt, className }) => {
   const [loaded, setLoaded] = useState(false);
   return (
     <div className="relative overflow-hidden bg-gray-100">
-      {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-100 to-gray-200" />}
+      {!loaded && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
       <img src={src} alt={alt} loading="lazy" className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`} onLoad={() => setLoaded(true)} />
     </div>
   );
@@ -27,7 +27,7 @@ function AvailabilityBadge({ status }) {
   return <span className={`text-[10px] md:text-xs font-semibold px-2 md:px-3 py-1 rounded-full uppercase tracking-wider ${map[status] || "bg-gray-100 text-gray-700"}`}>{status}</span>;
 }
 
-export default function PackagesSection({ whatsapp = "918796306375" }) {
+export default function PackagesSection() {
   const [packages, setPackages] = useState([]);
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(true);
@@ -35,25 +35,20 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/packages").then((r) => { setPackages(r.data); setLoading(false); }).catch(() => setLoading(false));
+    api.get("/packages").then(res => { setPackages(res.data); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  const filtered = filter === "All" ? packages : packages.filter((p) => p.event_category === filter);
-  const displayedPackages = filtered.slice(0, visibleCount);
+  const filtered = filter === "All" ? packages : packages.filter(p => p.event_category === filter);
+  const displayed = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
-  const loadMore = () => setVisibleCount(prev => prev + 6);
 
-  const handleInquiryClick = (pkg) => {
-    sessionStorage.setItem("inquiryPackage", JSON.stringify({
-      name: pkg.package_name,
-      category: pkg.event_category,
-      price: pkg.price
-    }));
+  const handleInquiry = (pkg) => {
+    sessionStorage.setItem("inquiryPackage", JSON.stringify({ name: pkg.package_name, category: pkg.event_category, price: pkg.price }));
     navigate("/");
     setTimeout(() => {
-      const contactSection = document.getElementById("contact");
-      if (contactSection) contactSection.scrollIntoView({ behavior: "smooth" });
-    }, 200);
+      const contact = document.getElementById("contact");
+      if (contact) contact.scrollIntoView({ behavior: "smooth" });
+    }, 300);
   };
 
   if (loading) {
@@ -79,12 +74,12 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl text-[#6B4F8C] leading-tight">Choose your <span className="text-[#BFA2DB]">perfect</span> celebration</h2>
         </div>
 
-        <div className="flex flex-nowrap md:flex-wrap gap-2 mb-8 md:mb-12 overflow-x-auto pb-4 md:pb-0 scrollbar-none">
+        <div className="flex flex-nowrap md:flex-wrap gap-2 mb-8 md:mb-12 overflow-x-auto pb-4 scrollbar-none">
           {CATEGORIES.map(c => <button key={c} onClick={() => { setFilter(c); setVisibleCount(6); }} className={`px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm uppercase tracking-wider transition-all whitespace-nowrap ${filter === c ? "bg-[#6B4F8C] text-white shadow-md" : "bg-white text-[#6B4F8C] hover:bg-[#BFA2DB]/30"}`}>{c}</button>)}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
-          {displayedPackages.map((p, i) => (
+          {displayed.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: Math.min(i * 0.05, 0.3) }} className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
               <div className="relative aspect-[4/3] overflow-hidden">
                 <LazyImage src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"} alt={p.package_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -106,7 +101,7 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
                   </div>
                   <div className="flex gap-2">
                     <Link to={`/packages/${p.id}`} className="flex-1 inline-flex items-center justify-center gap-1 bg-[#6B4F8C] text-white px-3 md:px-4 py-2.5 rounded-full text-xs md:text-sm uppercase tracking-wider hover:bg-[#4F3A6A] transition-all">Details <ArrowRight size={14} /></Link>
-                    <button onClick={() => handleInquiryClick(p)} className="inline-flex items-center justify-center gap-1 bg-[#25D366] text-white px-3 md:px-4 py-2.5 rounded-full text-xs md:text-sm uppercase tracking-wider hover:scale-105 transition-all whitespace-nowrap"><Send size={14} /> Enquire</button>
+                    <button onClick={() => handleInquiry(p)} className="inline-flex items-center justify-center gap-1 bg-[#25D366] text-white px-3 md:px-4 py-2.5 rounded-full text-xs md:text-sm uppercase tracking-wider hover:scale-105 transition-all whitespace-nowrap"><Send size={14} /> Enquire</button>
                   </div>
                 </div>
               </div>
@@ -114,7 +109,7 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
           ))}
         </div>
 
-        {hasMore && <div className="text-center mt-10 md:mt-12"><button onClick={loadMore} className="inline-flex items-center gap-2 px-6 md:px-8 py-2.5 md:py-3 bg-white border-2 border-[#6B4F8C] text-[#6B4F8C] rounded-full text-sm md:text-base font-medium hover:bg-[#6B4F8C] hover:text-white transition-all">Load More Packages <ArrowRight size={16} /></button></div>}
+        {hasMore && <div className="text-center mt-10 md:mt-12"><button onClick={() => setVisibleCount(prev => prev + 6)} className="inline-flex items-center gap-2 px-6 md:px-8 py-2.5 md:py-3 bg-white border-2 border-[#6B4F8C] text-[#6B4F8C] rounded-full text-sm md:text-base font-medium hover:bg-[#6B4F8C] hover:text-white transition-all">Load More Packages <ArrowRight size={16} /></button></div>}
       </div>
     </section>
   );
