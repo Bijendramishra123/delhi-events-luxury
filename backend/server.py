@@ -409,10 +409,18 @@ async def login(payload: LoginIn, response: Response):
     if not user or not verify_password(payload.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_access_token(user["id"], email)
+    
+    # ✅ FIXED: Production cookie settings
     response.set_cookie(
-        key="access_token", value=token, httponly=True,
-        secure=False, samesite="lax", max_age=604800, path="/"
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,          # Required for HTTPS (Render uses HTTPS)
+        samesite="none",      # Required for cross-site requests (frontend on decodiaries.com, backend on render.com)
+        max_age=604800,       # 7 days
+        path="/"
     )
+    
     return {"id": user["id"], "email": email, "name": user.get("name", "Admin")}
 
 @api_router.post("/auth/logout")
@@ -649,8 +657,8 @@ app.add_middleware(
         "http://localhost:8000",
         "https://delhi-events-backend.onrender.com",
         "https://delhi-events-luxury.vercel.app",
-        "https://www.decodiaries.com",      # <-- ADD THIS
-        "https://decodiaries.com",           # <-- ADD THIS
+        "https://www.decodiaries.com",
+        "https://decodiaries.com",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
