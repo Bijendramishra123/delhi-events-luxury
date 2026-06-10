@@ -1,100 +1,54 @@
 import axios from "axios";
 
-// -------------------------------
-// ✅ FIXED: Hardcode local backend URL for development
-// -------------------------------
-const LOCAL_BACKEND_URL = "http://localhost:8000";
+// Environment-aware API URL configuration
+const getApiUrl = () => {
+  // Production: Use environment variable
+  if (process.env.NODE_ENV === "production") {
+    return process.env.REACT_APP_API_URL || "/api";
+  }
+  
+  // Development: Use local Docker backend
+  return process.env.REACT_APP_API_URL || "http://localhost:8001/api";
+};
 
-// For production, you can still use env variables
-// But for local dev, we force localhost
-const PRIMARY_URL = process.env.NODE_ENV === "production" 
-  ? (process.env.REACT_APP_BACKEND_URL || LOCAL_BACKEND_URL)
-  : LOCAL_BACKEND_URL;
+const API_URL = getApiUrl();
 
-// Optional fallback host (set REACT_APP_FALLBACK_BACKEND_URL in production env).
-const FALLBACK_URL = process.env.REACT_APP_FALLBACK_BACKEND_URL || "";
-
-let activeBackend = PRIMARY_URL;
-
-export const BACKEND_URL = PRIMARY_URL;
-export const API = `${PRIMARY_URL}/api`;
+console.log(`🌐 API URL: ${API_URL} (${process.env.NODE_ENV} mode)`);
 
 const api = axios.create({
-  baseURL: `${PRIMARY_URL}/api`,
+  baseURL: API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 30000,
 });
 
-// Track if we've already failed over to avoid loops
-let failedOver = false;
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`📡 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const isNetworkError =
-      !error.response &&
-      (error.code === "ERR_NETWORK" ||
-        error.code === "ECONNABORTED" ||
-        error.message?.includes("Network Error") ||
-        error.message?.includes("SSL") ||
-        error.message?.includes("handshake"));
-
-    // If primary backend fails with network/SSL error, switch to fallback once
-    if (isNetworkError && !failedOver && FALLBACK_URL && activeBackend !== FALLBACK_URL) {
-      failedOver = true;
-      activeBackend = FALLBACK_URL;
-      api.defaults.baseURL = `${FALLBACK_URL}/api`;
-
+  (error) => {
+    if (error.response?.status === 401) {
       if (process.env.NODE_ENV !== "production") {
-        console.warn(`[api] Primary backend ${PRIMARY_URL} failed, falling back to ${FALLBACK_URL}`);
+        console.warn("🔒 Unauthorized access");
       }
-
-      // Retry the original request against the fallback backend
-      const original = error.config;
-      original.baseURL = `${FALLBACK_URL}/api`;
-      return api.request(original);
     }
-
     return Promise.reject(error);
   }
 );
 
-// Add request interceptor for debugging
-api.interceptors.request.use((config) => {
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-  }
-  return config;
-});
-
 export default api;
-
-export function getActiveBackend() {
-  return activeBackend;
-}
-
-export function buildWhatsAppLink(phone, message) {
-  const encoded = encodeURIComponent(message);
-  const isMobile = typeof navigator !== "undefined" &&
-    /android|iphone|ipad|ipod|iemobile|blackberry|opera mini|mobile/i.test(navigator.userAgent || "");
-  if (isMobile) {
-    return `https://wa.me/${phone}?text=${encoded}`;
-  }
-  return `https://web.whatsapp.com/send?phone=${phone}&text=${encoded}`;
-}
-
-export function openWhatsApp(e, phone, message) {
-  if (e && e.preventDefault) e.preventDefault();
-  const url = buildWhatsAppLink(phone, message);
-  try {
-    const w = window.open(url, "_blank", "noopener,noreferrer");
-    if (!w) window.top.location.href = url;
-  } catch (err) {
-    window.location.href = url;
-  }
-}
 
 export function formatPrice(n) {
   if (n == null) return "—";
@@ -105,7 +59,7 @@ export function formatApiErrorDetail(detail) {
   if (detail == null) return "Something went wrong. Please try again.";
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail))
-    return detail.map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e))).filter(Boolean).join(" ");
-  if (detail && typeof detail.msg === "string") return detail.msg;
+    return detail.map((e) => e?.msg || JSON.stringify(e)).filter(Boolean).join(" ");
+  if (detail?.msg) return detail.msg;
   return String(detail);
 }
