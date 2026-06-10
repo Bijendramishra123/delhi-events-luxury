@@ -22,14 +22,14 @@ export default function Navbar() {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 30);
+      setScrolled(window.scrollY > 20);
       if (location.pathname === "/") {
         const sections = ["home", "events", "packages", "gallery", "testimonials", "contact"];
         for (const section of sections) {
-          const element = document.getElementById(section);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            if (rect.top <= 120 && rect.bottom >= 120) {
+          const el = document.getElementById(section);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= 100 && rect.bottom >= 100) {
               setActiveLink(section);
               break;
             }
@@ -47,8 +47,8 @@ export default function Navbar() {
       const hash = location.hash.substring(1);
       setTimeout(() => {
         const el = document.getElementById(hash);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 200);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
     }
   }, [location]);
 
@@ -58,7 +58,7 @@ export default function Navbar() {
       return;
     }
     const el = document.getElementById(hash);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handleClick = (e, link) => {
@@ -74,7 +74,7 @@ export default function Navbar() {
     } else {
       if (location.pathname !== "/") {
         navigate("/");
-        setTimeout(() => scrollTo(link.hash), 300);
+        setTimeout(() => scrollTo(link.hash), 200);
       } else {
         scrollTo(link.hash);
       }
@@ -82,18 +82,18 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
-      scrolled ? "bg-white/95 backdrop-blur-xl shadow-md py-3" : "bg-white/80 backdrop-blur-sm py-5"
+    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      scrolled ? "bg-white/95 backdrop-blur-md shadow-md py-2" : "bg-white/80 backdrop-blur-sm py-3"
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-3">
-          <img src="/assets/logo.png" alt="Decodiaries" className="h-12 md:h-14 w-auto" />
+      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+        <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center">
+          <img src="/assets/logo.png" alt="Decodiaries" className="h-10 md:h-12 w-auto" />
         </Link>
 
-        <ul className="hidden lg:flex items-center gap-8">
+        <ul className="hidden lg:flex items-center gap-6">
           {links.map((link) => (
             <li key={link.id}>
-              <a href={link.hash ? `/#${link.hash}` : "/"} onClick={(e) => handleClick(e, link)} className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition px-2 py-1 ${
+              <a href={link.hash ? `/#${link.hash}` : "/"} onClick={(e) => handleClick(e, link)} className={`relative text-xs uppercase tracking-wide font-semibold transition px-2 py-1 ${
                 activeLink === link.id && location.pathname === "/" ? "text-[#6B4F8C]" : "text-gray-700 hover:text-[#6B4F8C]"
               }`}>
                 {link.label}
@@ -105,28 +105,28 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <button onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })} className="hidden lg:inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md bg-[#6B4F8C] text-white hover:bg-[#4F3A6A]">
+        <button onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })} className="hidden lg:inline-flex items-center text-xs uppercase tracking-wider px-5 py-2 rounded-full shadow-md bg-[#6B4F8C] text-white active:scale-95 transition-all">
           Book Consultation
         </button>
 
-        <button onClick={() => setOpen(!open)} className="lg:hidden p-2 rounded-lg text-gray-700">
-          {open ? <X size={24} /> : <Menu size={24} />}
+        <button onClick={() => setOpen(!open)} className="lg:hidden p-1.5 rounded-lg text-gray-700 active:bg-gray-100 transition-all">
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="lg:hidden bg-white border-t px-6 py-6 shadow-lg">
-            <ul className="flex flex-col gap-3">
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="lg:hidden bg-white border-t px-4 py-4 shadow-lg">
+            <ul className="flex flex-col gap-2">
               {links.map((link) => (
                 <li key={link.id}>
-                  <a href={link.hash ? `/#${link.hash}` : "/"} onClick={(e) => handleClick(e, link)} className="block text-gray-700 text-sm uppercase tracking-wider py-3 px-4 rounded-lg hover:bg-gray-50">
+                  <a href={link.hash ? `/#${link.hash}` : "/"} onClick={(e) => handleClick(e, link)} className="block text-gray-700 text-sm py-3 px-3 rounded-lg active:bg-gray-50 transition-all">
                     {link.label}
                   </a>
                 </li>
               ))}
               <li>
-                <button onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })} className="w-full text-center bg-[#6B4F8C] text-white px-6 py-3 rounded-full text-sm uppercase tracking-wider mt-3">
+                <button onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })} className="w-full text-center bg-[#6B4F8C] text-white py-3 rounded-full text-sm font-medium mt-2 active:scale-95 transition-all">
                   Book Consultation
                 </button>
               </li>

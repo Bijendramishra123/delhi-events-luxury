@@ -292,3 +292,43 @@ a, button {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Hide scrollbar for horizontal scrolling categories */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch manipulation for better mobile tap response */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling for entire page */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Better tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improved button active state for mobile */
+button, a, [role="button"] {
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+button:active, a:active {
+  transform: scale(0.97);
+}
+
+/* Smooth image loading */
+img {
+  content-visibility: auto;
+}

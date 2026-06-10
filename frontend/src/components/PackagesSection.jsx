@@ -1,18 +1,37 @@
 
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Send, Sparkles } from "lucide-react";
 import api, { formatPrice } from "../lib/api";
 
 const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
 
+// Optimized Lazy Image with blur placeholder
 const LazyImage = ({ src, alt, className }) => {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef();
+  const inView = useInView(imgRef, { once: true, margin: "100px" });
+
+  useEffect(() => {
+    if (inView && imgRef.current) {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => setLoaded(true);
+    }
+  }, [inView, src]);
+
   return (
-    <div className="relative overflow-hidden bg-gray-100">
-      {!loaded && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
-      <img src={src} alt={alt} loading="lazy" className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`} onLoad={() => setLoaded(true)} />
+    <div ref={imgRef} className="relative overflow-hidden bg-gray-100 aspect-[4/3]">
+      {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />}
+      {inView && (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className={`${className} transition-all duration-700 ${loaded ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
+        />
+      )}
     </div>
   );
 };
@@ -24,7 +43,11 @@ function AvailabilityBadge({ status }) {
     "Fully Booked": "bg-red-100 text-red-700",
     "Coming Soon": "bg-blue-100 text-blue-700",
   };
-  return <span className={`text-[10px] md:text-xs font-semibold px-2 md:px-3 py-1 rounded-full uppercase tracking-wider ${map[status] || "bg-gray-100 text-gray-700"}`}>{status}</span>;
+  return (
+    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider ${map[status] || "bg-gray-100 text-gray-700"}`}>
+      {status === "Limited Availability" ? "Limited" : status}
+    </span>
+  );
 }
 
 export default function PackagesSection() {
@@ -35,7 +58,9 @@ export default function PackagesSection() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/packages").then(res => { setPackages(res.data); setLoading(false); }).catch(() => setLoading(false));
+    api.get("/packages")
+      .then(res => { setPackages(res.data); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
   const filtered = filter === "All" ? packages : packages.filter(p => p.event_category === filter);
@@ -43,20 +68,35 @@ export default function PackagesSection() {
   const hasMore = filtered.length > visibleCount;
 
   const handleInquiry = (pkg) => {
-    sessionStorage.setItem("inquiryPackage", JSON.stringify({ name: pkg.package_name, category: pkg.event_category, price: pkg.price }));
+    sessionStorage.setItem("inquiryPackage", JSON.stringify({
+      name: pkg.package_name,
+      category: pkg.event_category,
+      price: pkg.price
+    }));
     navigate("/");
     setTimeout(() => {
       const contact = document.getElementById("contact");
-      if (contact) contact.scrollIntoView({ behavior: "smooth" });
-    }, 300);
+      if (contact) contact.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
   };
 
+  // Skeleton Loader
   if (loading) {
     return (
-      <section id="packages" className="py-24 md:py-32 bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1,2,3,4,5,6].map(i => <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse"><div className="aspect-[4/3] bg-gray-200" /><div className="p-6 space-y-3"><div className="h-4 bg-gray-200 rounded w-1/3" /><div className="h-6 bg-gray-200 rounded w-2/3" /><div className="h-4 bg-gray-200 rounded w-full" /></div></div>)}
+      <section id="packages" className="py-16 md:py-24 bg-[#FAF9F6]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+                <div className="aspect-[4/3] bg-gray-200" />
+                <div className="p-4 space-y-3">
+                  <div className="h-3 bg-gray-200 rounded w-1/4" />
+                  <div className="h-5 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-full" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -64,44 +104,105 @@ export default function PackagesSection() {
   }
 
   return (
-    <section id="packages" className="py-16 md:py-24 lg:py-32 bg-[#FAF9F6]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 bg-[#6B4F8C]/10 rounded-full px-4 py-2 mb-4">
-            <Sparkles className="w-4 h-4 text-[#6B4F8C]" />
-            <span className="text-xs uppercase tracking-[0.2em] text-[#6B4F8C] font-semibold">Curated Packages</span>
+    <section id="packages" className="py-12 md:py-20 lg:py-24 bg-[#FAF9F6]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="text-center mb-8 md:mb-12">
+          <div className="inline-flex items-center gap-2 bg-[#6B4F8C]/10 rounded-full px-3 py-1.5 md:px-4 md:py-2 mb-3">
+            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#6B4F8C]" />
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-[#6B4F8C] font-semibold">Curated Packages</span>
           </div>
-          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl text-[#6B4F8C] leading-tight">Choose your <span className="text-[#BFA2DB]">perfect</span> celebration</h2>
+          <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl text-[#6B4F8C] leading-tight">
+            Choose your <span className="text-[#BFA2DB]">perfect</span> celebration
+          </h2>
+          <p className="text-gray-500 text-sm md:text-base mt-2 max-w-2xl mx-auto">Explore our handcrafted packages designed for every special moment</p>
         </div>
 
-        <div className="flex flex-nowrap md:flex-wrap gap-2 mb-8 md:mb-12 overflow-x-auto pb-4 scrollbar-none">
-          {CATEGORIES.map(c => <button key={c} onClick={() => { setFilter(c); setVisibleCount(6); }} className={`px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm uppercase tracking-wider transition-all whitespace-nowrap ${filter === c ? "bg-[#6B4F8C] text-white shadow-md" : "bg-white text-[#6B4F8C] hover:bg-[#BFA2DB]/30"}`}>{c}</button>)}
+        {/* Horizontal Scroll Categories - Mobile Friendly */}
+        <div className="flex flex-nowrap gap-2 mb-6 md:mb-8 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c}
+              onClick={() => { setFilter(c); setVisibleCount(6); }}
+              className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap touch-manipulation ${
+                filter === c
+                  ? "bg-[#6B4F8C] text-white shadow-md active:scale-95"
+                  : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 active:bg-gray-100"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
+        {/* Packages Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {displayed.map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: Math.min(i * 0.05, 0.3) }} className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <LazyImage src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"} alt={p.package_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                {p.featured && <div className="absolute top-3 left-3 bg-[#6B4F8C] text-white text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full uppercase tracking-wider font-semibold">Featured</div>}
-                <div className="absolute top-3 right-3"><AvailabilityBadge status={p.availability_status} /></div>
-              </div>
-              <div className="p-4 md:p-5 lg:p-6 flex flex-col flex-1">
-                <div className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-[#6B4F8C]/70 mb-1">{p.event_category}</div>
-                <h3 className="font-heading text-lg md:text-xl lg:text-2xl text-[#6B4F8C] mb-2 line-clamp-1">{p.package_name}</h3>
-                <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-4 line-clamp-2">{p.description}</p>
-                <ul className="space-y-1.5 mb-4">
-                  {(p.services || []).slice(0, 3).map(s => <li key={s} className="flex items-start gap-2 text-xs md:text-sm text-gray-600"><Check size={14} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" /><span className="line-clamp-1">{s}</span></li>)}
-                  {(p.services || []).length > 3 && <li className="text-xs text-gray-400 pl-6">+{p.services.length - 3} more services</li>}
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
+              className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] touch-manipulation"
+            >
+              {/* Image */}
+              <LazyImage
+                src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"}
+                alt={p.package_name}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Content */}
+              <div className="p-3 md:p-5">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] md:text-xs uppercase tracking-wide text-[#6B4F8C]/70 font-medium">{p.event_category}</span>
+                  <AvailabilityBadge status={p.availability_status} />
+                </div>
+                
+                <h3 className="font-heading text-base md:text-xl text-[#6B4F8C] font-semibold mb-1 line-clamp-1">{p.package_name}</h3>
+                <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-3 line-clamp-2">{p.description}</p>
+
+                {/* Services Preview */}
+                <ul className="space-y-1 mb-3">
+                  {(p.services || []).slice(0, 2).map((s) => (
+                    <li key={s} className="flex items-start gap-1.5 text-xs text-gray-600">
+                      <Check size={12} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
+                      <span className="line-clamp-1">{s}</span>
+                    </li>
+                  ))}
+                  {(p.services || []).length > 2 && (
+                    <li className="text-[10px] text-gray-400 pl-5">+{p.services.length - 2} more services</li>
+                  )}
                 </ul>
-                <div className="mt-auto pt-4 border-t border-gray-100">
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-[10px] md:text-xs text-gray-400">Starting at</span>
-                    {p.discount_price ? (<><span className="font-heading text-xl md:text-2xl text-[#6B4F8C]">{formatPrice(p.discount_price)}</span><span className="text-xs md:text-sm text-gray-400 line-through">{formatPrice(p.price)}</span></>) : (<span className="font-heading text-xl md:text-2xl text-[#6B4F8C]">{formatPrice(p.price)}</span>)}
+
+                {/* Price and Buttons */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex items-baseline gap-2 mb-3">
+                    <span className="text-[10px] text-gray-400">Starting at</span>
+                    {p.discount_price ? (
+                      <>
+                        <span className="font-heading text-lg md:text-2xl text-[#6B4F8C] font-bold">{formatPrice(p.discount_price)}</span>
+                        <span className="text-xs text-gray-400 line-through">{formatPrice(p.price)}</span>
+                      </>
+                    ) : (
+                      <span className="font-heading text-lg md:text-2xl text-[#6B4F8C] font-bold">{formatPrice(p.price)}</span>
+                    )}
                   </div>
+
                   <div className="flex gap-2">
-                    <Link to={`/packages/${p.id}`} className="flex-1 inline-flex items-center justify-center gap-1 bg-[#6B4F8C] text-white px-3 md:px-4 py-2.5 rounded-full text-xs md:text-sm uppercase tracking-wider hover:bg-[#4F3A6A] transition-all">Details <ArrowRight size={14} /></Link>
-                    <button onClick={() => handleInquiry(p)} className="inline-flex items-center justify-center gap-1 bg-[#25D366] text-white px-3 md:px-4 py-2.5 rounded-full text-xs md:text-sm uppercase tracking-wider hover:scale-105 transition-all whitespace-nowrap"><Send size={14} /> Enquire</button>
+                    <Link
+                      to={`/packages/${p.id}`}
+                      className="flex-1 flex items-center justify-center gap-1 bg-[#6B4F8C] text-white px-3 py-2 rounded-full text-[11px] md:text-xs font-medium uppercase tracking-wider active:scale-95 transition-all"
+                    >
+                      Details <ArrowRight size={12} />
+                    </Link>
+                    <button
+                      onClick={() => handleInquiry(p)}
+                      className="flex items-center justify-center gap-1 bg-[#25D366] text-white px-3 py-2 rounded-full text-[11px] md:text-xs font-medium uppercase tracking-wider active:scale-95 transition-all whitespace-nowrap touch-manipulation"
+                    >
+                      <Send size={12} /> Enquire
+                    </button>
                   </div>
                 </div>
               </div>
@@ -109,7 +210,17 @@ export default function PackagesSection() {
           ))}
         </div>
 
-        {hasMore && <div className="text-center mt-10 md:mt-12"><button onClick={() => setVisibleCount(prev => prev + 6)} className="inline-flex items-center gap-2 px-6 md:px-8 py-2.5 md:py-3 bg-white border-2 border-[#6B4F8C] text-[#6B4F8C] rounded-full text-sm md:text-base font-medium hover:bg-[#6B4F8C] hover:text-white transition-all">Load More Packages <ArrowRight size={16} /></button></div>}
+        {/* Load More */}
+        {hasMore && (
+          <div className="text-center mt-8 md:mt-10">
+            <button
+              onClick={() => setVisibleCount(prev => prev + 6)}
+              className="inline-flex items-center gap-2 px-5 md:px-6 py-2 md:py-2.5 bg-white border border-[#6B4F8C] text-[#6B4F8C] rounded-full text-xs md:text-sm font-medium active:scale-95 transition-all touch-manipulation"
+            >
+              Load More <ArrowRight size={14} />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
