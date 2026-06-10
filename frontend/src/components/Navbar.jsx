@@ -5,12 +5,12 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
-  { id: "home", label: "Home", path: "/", hash: "" },
-  { id: "events", label: "Events", path: "/", hash: "events" },
-  { id: "packages", label: "Packages", path: "/", hash: "packages" },
-  { id: "gallery", label: "Gallery", path: "/", hash: "gallery" },
-  { id: "testimonials", label: "Testimonials", path: "/", hash: "testimonials" },
-  { id: "contact", label: "Contact", path: "/", hash: "contact" },
+  { id: "home", label: "Home", hash: "" },
+  { id: "events", label: "Events", hash: "events" },
+  { id: "packages", label: "Packages", hash: "packages" },
+  { id: "gallery", label: "Gallery", hash: "gallery" },
+  { id: "testimonials", label: "Testimonials", hash: "testimonials" },
+  { id: "contact", label: "Contact", hash: "contact" },
 ];
 
 const navItemVariants = {
@@ -33,25 +33,38 @@ export default function Navbar() {
 
   // Scroll to section function
   const scrollToSection = (sectionId) => {
-    if (sectionId === "") {
+    if (!sectionId || sectionId === "") {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      return true;
+    
+    // Try to find the element
+    let element = document.getElementById(sectionId);
+    
+    // If not found, wait a bit and try again (for page navigation)
+    if (!element) {
+      setTimeout(() => {
+        element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 200);
+      return;
     }
-    return false;
+    
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   // Handle click on nav link
   const handleClick = (e, link) => {
     e.preventDefault();
+    e.stopPropagation();
     setOpen(false);
     
-    // If home link
-    if (link.hash === "") {
+    const { hash } = link;
+    
+    // If home link (no hash)
+    if (hash === "") {
       if (location.pathname !== "/") {
         navigate("/");
         setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
@@ -61,15 +74,15 @@ export default function Navbar() {
       return;
     }
     
-    // If on home page, scroll to section
+    // If already on home page
     if (location.pathname === "/") {
-      scrollToSection(link.hash);
+      scrollToSection(hash);
     } else {
       // Navigate to home page with hash
-      navigate(`/#${link.hash}`);
+      navigate(`/#${hash}`);
       setTimeout(() => {
-        scrollToSection(link.hash);
-      }, 200);
+        scrollToSection(hash);
+      }, 300);
     }
   };
 
@@ -95,16 +108,20 @@ export default function Navbar() {
     };
     
     window.addEventListener("scroll", onScroll);
+    // Trigger once on mount
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, [location.pathname]);
 
-  // Handle hash on page load
+  // Handle hash on page load and navigation
   useEffect(() => {
     if (location.hash && location.pathname === "/") {
       const hash = location.hash.substring(1);
+      // Wait for DOM to be fully rendered
       setTimeout(() => {
         scrollToSection(hash);
-      }, 200);
+        setActiveLink(hash);
+      }, 300);
     }
   }, [location]);
 
@@ -118,10 +135,15 @@ export default function Navbar() {
     <nav className={navClass} data-testid="navbar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
-        <Link 
-          to="/" 
-          className="flex items-center gap-3 group"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        <button
+          onClick={() => {
+            if (location.pathname !== "/") {
+              navigate("/");
+            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            setOpen(false);
+          }}
+          className="flex items-center gap-3 group focus:outline-none"
         >
           <motion.img
             src="/assets/logo.png"
@@ -130,7 +152,7 @@ export default function Navbar() {
             whileHover={{ scale: 1.05, rotate: 2 }}
             transition={{ duration: 0.3 }}
           />
-        </Link>
+        </button>
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8">
@@ -144,10 +166,9 @@ export default function Navbar() {
               whileHover="hover"
               whileTap="tap"
             >
-              <a
-                href={l.hash ? `/#${l.hash}` : "/"}
+              <button
                 onClick={(e) => handleClick(e, l)}
-                className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition-all duration-300 px-2 py-1 cursor-pointer ${
+                className={`relative text-sm uppercase tracking-[0.15em] font-semibold transition-all duration-300 px-2 py-1 cursor-pointer focus:outline-none ${
                   activeLink === l.hash && location.pathname === "/" && l.hash !== ""
                     ? "text-[#6B4F8C]"
                     : "text-gray-700 hover:text-[#6B4F8C]"
@@ -159,36 +180,27 @@ export default function Navbar() {
                     activeLink === l.hash && location.pathname === "/" && l.hash !== "" ? "w-full" : "w-0 group-hover:w-full"
                   }`}
                 />
-                <span className="absolute inset-0 rounded-lg bg-[#6B4F8C]/0 transition-all duration-300 group-hover:bg-[#6B4F8C]/5 -z-10" />
-              </a>
+                <span className="absolute inset-0 rounded-lg bg-[#6B4F8C]/0 transition-all duration-300 hover:bg-[#6B4F8C]/5 -z-10" />
+              </button>
             </motion.li>
           ))}
         </ul>
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
-          <motion.a
-            href="/#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              if (location.pathname === "/") {
-                scrollToSection("contact");
-              } else {
-                navigate("/#contact");
-                setTimeout(() => scrollToSection("contact"), 200);
-              }
-            }}
-            className="inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md transition-all duration-300 bg-[#6B4F8C] text-white hover:bg-[#4F3A6A]"
+          <motion.button
+            onClick={() => handleClick({ preventDefault: () => {} }, { hash: "contact" })}
+            className="inline-flex items-center text-sm uppercase tracking-wider px-6 py-3 rounded-full shadow-md transition-all duration-300 bg-[#6B4F8C] text-white hover:bg-[#4F3A6A] cursor-pointer focus:outline-none"
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >
             Book Consultation
-          </motion.a>
+          </motion.button>
         </div>
 
         {/* Mobile menu button */}
         <motion.button
-          className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${
+          className={`lg:hidden p-2 rounded-lg transition-colors duration-300 focus:outline-none ${
             scrolled ? "text-[#6B4F8C] hover:bg-gray-100" : "text-[#6B4F8C] hover:bg-gray-100"
           }`}
           onClick={() => setOpen(!open)}
@@ -217,17 +229,16 @@ export default function Navbar() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <a
-                    href={l.hash ? `/#${l.hash}` : "/"}
+                  <button
                     onClick={(e) => handleClick(e, l)}
-                    className={`block text-gray-700 text-sm uppercase tracking-wider py-3 px-4 rounded-lg transition-all duration-300 cursor-pointer ${
+                    className={`block w-full text-left text-gray-700 text-sm uppercase tracking-wider py-3 px-4 rounded-lg transition-all duration-300 cursor-pointer focus:outline-none ${
                       activeLink === l.hash && location.pathname === "/" && l.hash !== ""
                         ? "bg-[#6B4F8C]/10 text-[#6B4F8C] font-semibold"
                         : "hover:bg-gray-50 hover:text-[#6B4F8C]"
                     }`}
                   >
                     {l.label}
-                  </a>
+                  </button>
                 </motion.li>
               ))}
               <motion.li
@@ -235,22 +246,15 @@ export default function Navbar() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: links.length * 0.05 }}
               >
-                <a
-                  href="/#contact"
+                <button
                   onClick={(e) => {
-                    e.preventDefault();
+                    handleClick(e, { hash: "contact" });
                     setOpen(false);
-                    if (location.pathname === "/") {
-                      scrollToSection("contact");
-                    } else {
-                      navigate("/#contact");
-                      setTimeout(() => scrollToSection("contact"), 200);
-                    }
                   }}
-                  className="inline-block w-full text-center bg-[#6B4F8C] text-white px-6 py-3 rounded-full text-sm uppercase tracking-wider mt-3 shadow-md hover:bg-[#4F3A6A] transition-all duration-300 cursor-pointer"
+                  className="inline-block w-full text-center bg-[#6B4F8C] text-white px-6 py-3 rounded-full text-sm uppercase tracking-wider mt-3 shadow-md hover:bg-[#4F3A6A] transition-all duration-300 cursor-pointer focus:outline-none"
                 >
                   Book Consultation
-                </a>
+                </button>
               </motion.li>
             </ul>
           </motion.div>

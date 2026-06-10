@@ -34,36 +34,29 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch (err) {
-      if (isDev) console.warn("Logout request failed:", err?.response?.status);
-    }
-    
-    // Clear user state
+    // First, clear all local state
     setUser(null);
     
-    // Clear all localStorage items
+    // Clear all storage
     localStorage.clear();
-    
-    // Clear all sessionStorage items
     sessionStorage.clear();
     
-    // Clear all cookies
+    // Clear cookies
     document.cookie.split(";").forEach(function(c) {
       document.cookie = c
         .replace(/^ +/, "")
         .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
     
-    // Clear any auth related items specifically
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("admin_token");
-    sessionStorage.removeItem("token");
+    // Try to call logout API (don't wait for it)
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      if (isDev) console.warn("Logout API failed:", err?.response?.status);
+    }
     
-    if (isDev) console.log("Logout successful, all storage cleared");
+    // Force page reload to clear all React state
+    window.location.href = "/admin/login";
   }, []);
 
   const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);

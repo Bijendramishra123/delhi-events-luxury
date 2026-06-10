@@ -21,7 +21,7 @@ export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -43,24 +43,16 @@ export default function AdminLayout() {
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-    // Force navigation to login page
-    navigate("/admin/login", { replace: true });
-    // Reload to clear all state
-    setTimeout(() => {
-      window.location.href = "/admin/login";
-    }, 50);
+    // Call logout function from AuthContext
+    await logout();
+    // No need to navigate here because logout() does window.location.href
   };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
+      {/* Mobile Header with Toggle */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-30 px-4 py-3 flex items-center justify-between">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
