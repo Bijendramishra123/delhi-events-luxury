@@ -2,12 +2,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Send, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Send, Sparkles, X } from "lucide-react";
 import api, { formatPrice } from "../lib/api";
 
 const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
 
-// Optimized Lazy Image with blur placeholder
+// Lazy Image Component
 const LazyImage = ({ src, alt, className }) => {
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef();
@@ -50,11 +50,50 @@ function AvailabilityBadge({ status }) {
   );
 }
 
+// Toast Notification Component
+const ToastNotification = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -50, scale: 0.9 }}
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md"
+    >
+      <div className="bg-[#6B4F8C] text-white rounded-xl shadow-2xl p-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <Send size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">{message}</p>
+            <p className="text-xs text-white/80">Redirecting you to contact section...</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition active:scale-95"
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
 export default function PackagesSection() {
   const [packages, setPackages] = useState([]);
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(6);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,16 +107,29 @@ export default function PackagesSection() {
   const hasMore = filtered.length > visibleCount;
 
   const handleInquiry = (pkg) => {
+    // Show toast notification
+    setToastMessage(`✨ "${pkg.package_name}" selected! Please fill the contact form below.`);
+    setShowToast(true);
+    
+    // Store package info in sessionStorage
     sessionStorage.setItem("inquiryPackage", JSON.stringify({
       name: pkg.package_name,
       category: pkg.event_category,
       price: pkg.price
     }));
-    navigate("/");
+    
+    // Navigate to contact section after short delay
     setTimeout(() => {
-      const contact = document.getElementById("contact");
-      if (contact) contact.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 200);
+      navigate("/");
+      setTimeout(() => {
+        const contact = document.getElementById("contact");
+        if (contact) contact.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    }, 800);
+  };
+
+  const closeToast = () => {
+    setShowToast(false);
   };
 
   // Skeleton Loader
@@ -104,7 +156,10 @@ export default function PackagesSection() {
   }
 
   return (
-    <section id="packages" className="py-12 md:py-20 lg:py-24 bg-[#FAF9F6]">
+    <section id="packages" className="py-12 md:py-20 lg:py-24 bg-[#FAF9F6] relative">
+      {/* Toast Notification */}
+      {showToast && <ToastNotification message={toastMessage} onClose={closeToast} />}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
@@ -118,7 +173,7 @@ export default function PackagesSection() {
           <p className="text-gray-500 text-sm md:text-base mt-2 max-w-2xl mx-auto">Explore our handcrafted packages designed for every special moment</p>
         </div>
 
-        {/* Horizontal Scroll Categories - Mobile Friendly */}
+        {/* Horizontal Scroll Categories */}
         <div className="flex flex-nowrap gap-2 mb-6 md:mb-8 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
           {CATEGORIES.map((c) => (
             <button

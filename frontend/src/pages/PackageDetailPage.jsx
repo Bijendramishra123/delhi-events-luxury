@@ -1,16 +1,51 @@
+
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Check, MessageCircle, Star } from "lucide-react";
-import { motion } from "framer-motion";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Check, MessageCircle, Star, Send, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api, { buildWhatsAppLink, openWhatsApp, formatPrice } from "../lib/api";
+
+// Toast Component
+const ToastNotification = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => onClose(), 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -50, scale: 0.9 }}
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md"
+    >
+      <div className="bg-[#6B4F8C] text-white rounded-xl shadow-2xl p-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <Send size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">{message}</p>
+            <p className="text-xs text-white/80">Redirecting you to contact section...</p>
+          </div>
+        </div>
+        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition">
+          <X size={14} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function PackageDetailPage() {
   const { id } = useParams();
   const [pkg, setPkg] = useState(null);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showToast, setShowToast] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -23,47 +58,56 @@ export default function PackageDetailPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-[#6B4F8C]" data-testid="pkg-detail-loading">Loading...</div>;
+  const handleInquiry = () => {
+    setShowToast(true);
+    sessionStorage.setItem("inquiryPackage", JSON.stringify({
+      name: pkg.package_name,
+      category: pkg.event_category,
+      price: pkg.price
+    }));
+    setTimeout(() => {
+      navigate("/");
+      setTimeout(() => {
+        const contact = document.getElementById("contact");
+        if (contact) contact.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    }, 800);
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-[#6B4F8C]">Loading...</div>;
   if (!pkg) return (
     <div className="min-h-screen flex items-center justify-center flex-col gap-4">
-      <p className="text-[#666]">Package not found.</p>
+      <p className="text-gray-500">Package not found.</p>
       <Link to="/" className="text-[#6B4F8C] underline">Back home</Link>
     </div>
   );
 
-  const images = pkg.gallery_images && pkg.gallery_images.length > 0
-    ? pkg.gallery_images
-    : [pkg.cover_image];
-
-  const waMessage = `Hello Team,\n\nI would like to inquire about the "${pkg.package_name}" (${pkg.event_category}) package.\n\nName: \nEvent Date: \nLocation: \nBudget: \n\nPlease contact me.`;
+  const images = pkg.gallery_images?.length > 0 ? pkg.gallery_images : [pkg.cover_image];
+  const waMessage = `Hello Team,\n\nI would like to inquire about the "${pkg.package_name}" (${pkg.event_category}) package.\n\nPlease contact me.`;
   const wa = buildWhatsAppLink("918796306375", waMessage);
 
   return (
-    <div className="bg-[#F8F5F2] min-h-screen" data-testid="package-detail-page">
+    <div className="bg-[#F8F5F2] min-h-screen">
       <Navbar />
+      <AnimatePresence>
+        {showToast && <ToastNotification message={`✨ "${pkg.package_name}" selected! Please fill the contact form.`} onClose={() => setShowToast(false)} />}
+      </AnimatePresence>
 
-      <div className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link to="/#packages" data-testid="back-to-packages" className="inline-flex items-center gap-2 text-[#6B4F8C] mb-8 text-sm uppercase tracking-wider hover:gap-3 transition-all">
+      <div className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <Link to="/#packages" className="inline-flex items-center gap-2 text-[#6B4F8C] mb-8 text-sm uppercase tracking-wider hover:gap-3 transition-all">
           <ArrowLeft size={16} /> Back to packages
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Images Gallery */}
           <div>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="aspect-[4/3] rounded-2xl overflow-hidden mb-4"
-            >
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-white">
               <img src={images[active]} alt={pkg.package_name} className="w-full h-full object-cover" />
-            </motion.div>
+            </div>
             {images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto no-scrollbar">
-                {images.map((img) => (
-                  <button
-                    key={img}
-                    onClick={() => setActive(images.indexOf(img))}
-                    data-testid={`thumb-${images.indexOf(img)}`}
-                    className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden transition-all ${active === images.indexOf(img) ? "ring-2 ring-[#6B4F8C]" : "opacity-60 hover:opacity-100"}`}
-                  >
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                {images.map((img, idx) => (
+                  <button key={idx} onClick={() => setActive(idx)} className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${active === idx ? "ring-2 ring-[#6B4F8C]" : "opacity-60 hover:opacity-100"}`}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -71,35 +115,36 @@ export default function PackageDetailPage() {
             )}
           </div>
 
+          {/* Details */}
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-[#6B4F8C] mb-3">{pkg.event_category}</p>
-            <h1 className="font-heading text-4xl md:text-5xl text-[#6B4F8C] mb-4">{pkg.package_name}</h1>
-            <div className="flex gap-1 mb-6">
-              {[...Array(5)].map((_, i) => <Star key={`star-${i}`} className="fill-[#BFA2DB] text-[#BFA2DB]" size={18} />)}
+            <p className="text-xs uppercase tracking-[0.3em] text-[#6B4F8C] mb-2">{pkg.event_category}</p>
+            <h1 className="font-heading text-3xl md:text-4xl text-[#6B4F8C] mb-3">{pkg.package_name}</h1>
+            <div className="flex gap-1 mb-4">
+              {[...Array(5)].map((_, i) => <Star key={i} className="fill-[#BFA2DB] text-[#BFA2DB]" size={16} />)}
             </div>
-            <p className="text-[#333] leading-relaxed mb-8">{pkg.description}</p>
+            <p className="text-gray-600 leading-relaxed mb-6">{pkg.description}</p>
 
-            <div className="bg-white rounded-2xl p-6 mb-8">
-              <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-xs uppercase tracking-wider text-[#666]">Starting at</span>
+            <div className="bg-white rounded-xl p-5 mb-6">
+              <div className="flex items-baseline gap-3">
+                <span className="text-xs text-gray-400">Starting at</span>
                 {pkg.discount_price ? (
                   <>
-                    <span className="font-heading text-3xl text-[#6B4F8C]">{formatPrice(pkg.discount_price)}</span>
-                    <span className="text-sm text-[#999] line-through">{formatPrice(pkg.price)}</span>
+                    <span className="font-heading text-2xl text-[#6B4F8C]">{formatPrice(pkg.discount_price)}</span>
+                    <span className="text-sm text-gray-400 line-through">{formatPrice(pkg.price)}</span>
                   </>
                 ) : (
-                  <span className="font-heading text-3xl text-[#6B4F8C]">{formatPrice(pkg.price)}</span>
+                  <span className="font-heading text-2xl text-[#6B4F8C]">{formatPrice(pkg.price)}</span>
                 )}
               </div>
-              <div className="text-xs uppercase tracking-wider text-[#6B4F8C]">{pkg.availability_status}</div>
+              <div className="text-xs text-[#6B4F8C] mt-1">{pkg.availability_status}</div>
             </div>
 
-            <div className="mb-8">
-              <h3 className="font-heading text-xl text-[#6B4F8C] mb-4">What&apos;s Included</h3>
-              <ul className="space-y-3">
-                {(pkg.services || []).map((s) => (
-                  <li key={s} className="flex items-start gap-3 text-[#333]">
-                    <Check size={18} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
+            <div className="mb-6">
+              <h3 className="font-heading text-lg text-[#6B4F8C] mb-3">What's Included</h3>
+              <ul className="grid grid-cols-1 gap-2">
+                {(pkg.services || []).map((s, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                    <Check size={14} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
                     <span>{s}</span>
                   </li>
                 ))}
@@ -107,28 +152,16 @@ export default function PackageDetailPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => openWhatsApp(e, "918796306375", waMessage)}
-                data-testid="detail-whatsapp"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-6 py-4 rounded-full hover:scale-[1.02] transition-transform"
-              >
-                <MessageCircle size={18} /> WhatsApp Inquiry
+              <a href={wa} target="_blank" rel="noopener noreferrer" onClick={(e) => openWhatsApp(e, "918796306375", waMessage)} className="flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-full text-sm font-medium active:scale-95 transition-all">
+                <MessageCircle size={16} /> WhatsApp Inquiry
               </a>
-              <Link
-                to="/#contact"
-                data-testid="detail-contact"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-[#6B4F8C] text-white px-6 py-4 rounded-full hover:bg-[#4F3A6A] transition-all"
-              >
-                Send Inquiry
-              </Link>
+              <button onClick={handleInquiry} className="flex items-center justify-center gap-2 bg-[#6B4F8C] text-white px-5 py-3 rounded-full text-sm font-medium active:scale-95 transition-all">
+                <Send size={16} /> Send Inquiry
+              </button>
             </div>
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );
