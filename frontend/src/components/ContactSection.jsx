@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Send, MessageCircle, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import api, { buildWhatsAppLink, openWhatsApp, formatApiErrorDetail } from "../lib/api";
 
-const EVENT_TYPES = ["Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming", "Other"];
+const EVENT_TYPES = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Other"];
 const BUDGETS = ["Under ₹1L", "₹1L - ₹3L", "₹3L - ₹7L", "₹7L - ₹15L", "₹15L+"];
 
 export default function ContactSection({ whatsapp = "918796306375" }) {
@@ -12,6 +13,27 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
     name: "", phone: "", email: "", event_type: "", event_date: "", location: "", budget: "", message: ""
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Check for package info from sessionStorage on mount
+  useEffect(() => {
+    const packageInfo = sessionStorage.getItem("inquiryPackage");
+    if (packageInfo) {
+      try {
+        const pkg = JSON.parse(packageInfo);
+        setForm(prev => ({
+          ...prev,
+          event_type: pkg.category,
+          message: `I'm interested in the "${pkg.name}" package (${pkg.category}). Please contact me with more details.\n\nBudget: ₹${pkg.price?.toLocaleString() || "Custom"}\n\n`
+        }));
+        // Clear after using
+        sessionStorage.removeItem("inquiryPackage");
+        // Show a toast notification
+        toast.info(`Package "${pkg.name}" selected! Please fill in your details below.`);
+      } catch (e) {
+        console.error("Error parsing package info:", e);
+      }
+    }
+  }, []);
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -33,7 +55,7 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
     }
   };
 
-  const whatsappMessage = `Hello Team,\n\nI would like to inquire about an event.\n\nName: ${form.name || ""}\nEvent Type: ${form.event_type || ""}\nEvent Date: ${form.event_date || ""}\nLocation: ${form.location || ""}\nBudget: ${form.budget || ""}\n\nPlease contact me.`;
+  const whatsappMessage = `Hello Team,\n\nI would like to inquire about an event.\n\nName: ${form.name || ""}\nEvent Type: ${form.event_type || ""}\nEvent Date: ${form.event_date || ""}\nLocation: ${form.location || ""}\nBudget: ${form.budget || ""}\n\nMessage: ${form.message || ""}\n\nPlease contact me.`;
 
   return (
     <section id="contact" className="py-24 md:py-32 bg-[#F8F5F2]" data-testid="contact-section">

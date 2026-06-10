@@ -34,21 +34,14 @@ export default function PackagesSection({ whatsapp = "918796306375" }) {
   const filtered = filter === "All" ? packages : packages.filter((p) => p.event_category === filter);
 
   const handleInquiryClick = (pkg) => {
-    // Store package info in sessionStorage to pre-fill contact form
+    // Store package info in sessionStorage for contact form
     sessionStorage.setItem("inquiryPackage", JSON.stringify({
       name: pkg.package_name,
       category: pkg.event_category,
       price: pkg.price
     }));
-    // Navigate to contact page
-    navigate("/#contact");
-    // Scroll to contact section after navigation
-    setTimeout(() => {
-      const contactSection = document.getElementById("contact");
-      if (contactSection) {
-        contactSection.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
+    // Navigate to home page and scroll to contact section
+    window.location.href = "/#contact";
   };
 
   return (
