@@ -57,35 +57,49 @@ export default function Navbar() {
 
   // Handle click on nav link
   const handleClick = (e, link) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setOpen(false);
-    
-    const { hash } = link;
-    
-    // If home link (no hash)
-    if (hash === "") {
-      if (location.pathname !== "/") {
-        navigate("/");
-        setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
-      } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      return;
-    }
-    
-    // If already on home page
-    if (location.pathname === "/") {
-      scrollToSection(hash);
-    } else {
-      // Navigate to home page with hash
-      navigate(`/#${hash}`);
-      setTimeout(() => {
-        scrollToSection(hash);
-      }, 300);
-    }
-  };
+  e.preventDefault();
+  setOpen(false);
 
+  // Home link
+  if (!link.hash || link.hash === "") {
+    if (location.pathname !== "/") {
+      window.location.href = "/";
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+
+    setActiveLink("home");
+    return;
+  }
+
+  // If not on home page
+  if (location.pathname !== "/") {
+    window.location.href = `/#${link.hash}`;
+    return;
+  }
+
+  // Scroll to section
+  const element = document.getElementById(link.hash);
+
+  if (element) {
+    const navbarHeight = 100;
+
+    const y =
+      element.getBoundingClientRect().top +
+      window.pageYOffset -
+      navbarHeight;
+
+    window.scrollTo({
+      top: y,
+      behavior: "smooth",
+    });
+
+    setActiveLink(link.hash);
+  }
+};
   // Handle scroll and active link
   useEffect(() => {
     const onScroll = () => {

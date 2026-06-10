@@ -102,12 +102,6 @@ export default function AdminLoginPage() {
               )}
             </motion.button>
           </form>
-
-          {/* Demo Credentials (optional - remove if not needed) */}
-          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-            <p className="text-xs text-gray-400 mb-2">Demo Credentials</p>
-            <p className="text-xs text-gray-500">admin@decodiaries.com / admin123</p>
-          </div>
         </div>
       </motion.div>
     </div>
