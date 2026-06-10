@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: delhi-events-backend-prod
+    ports:
+      - "8001:8000"
+    environment:
+      - MONGO_URL=${MONGO_URL}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
+      - APP_NAME=${APP_NAME}
+      - WHATSAPP_NUMBER=${WHATSAPP_NUMBER}
+      - ENVIRONMENT=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/packages"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8001/api}
+    container_name: delhi-events-frontend-prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

@@ -1,15 +1,33 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
 import { ChevronRight, Sparkles } from "lucide-react";
 
-// Scrolling images for right side
+// Optimized images with smaller sizes and WebP support
 const SCROLLING_IMAGES = [
-  "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg",
-  "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg",
-  "https://images.unsplash.com/photo-1741969494307-55394e3e4071?crop=entropy&cs=srgb&fm=jpg&q=85",
-  "https://images.pexels.com/photos/1682462/pexels-photo-1682462.jpeg",
-  "https://images.unsplash.com/photo-1618566864264-fb013f791da4?crop=entropy&cs=srgb&fm=jpg&q=85",
-  "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?crop=entropy&cs=srgb&fm=jpg&q=85",
+  {
+    src: "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    thumbnail: "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg?auto=compress&cs=tinysrgb&w=100&h=75&fit=crop"
+  },
+  {
+    src: "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    thumbnail: "https://images.pexels.com/photos/34079355/pexels-photo-34079355.jpeg?auto=compress&cs=tinysrgb&w=100&h=75&fit=crop"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1741969494307-55394e3e4071?w=800&h=600&fit=crop&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1741969494307-55394e3e4071?w=100&h=75&fit=crop&q=60"
+  },
+  {
+    src: "https://images.pexels.com/photos/1682462/pexels-photo-1682462.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    thumbnail: "https://images.pexels.com/photos/1682462/pexels-photo-1682462.jpeg?auto=compress&cs=tinysrgb&w=100&h=75&fit=crop"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1618566864264-fb013f791da4?w=800&h=600&fit=crop&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1618566864264-fb013f791da4?w=100&h=75&fit=crop&q=60"
+  },
+  {
+    src: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&h=600&fit=crop&q=80",
+    thumbnail: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=100&h=75&fit=crop&q=60"
+  },
 ];
 
 function Counter({ to, suffix = "+", duration = 2 }) {
@@ -34,15 +52,47 @@ function Counter({ to, suffix = "+", duration = 2 }) {
 
 export default function HeroSection() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [loadedImages, setLoadedImages] = useState({});
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
-  // Auto-scroll images every 5 seconds
+  // Preload next image for smoother transitions
+  const preloadImage = useCallback((index) => {
+    const nextIndex = (index + 1) % SCROLLING_IMAGES.length;
+    if (!loadedImages[nextIndex]) {
+      const img = new Image();
+      img.src = SCROLLING_IMAGES[nextIndex].src;
+      img.onload = () => {
+        setLoadedImages(prev => ({ ...prev, [nextIndex]: true }));
+      };
+    }
+  }, [loadedImages]);
+
+  // Auto-scroll images every 5 seconds with preloading
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % SCROLLING_IMAGES.length);
+      setCurrentImageIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % SCROLLING_IMAGES.length;
+        preloadImage(nextIndex);
+        return nextIndex;
+      });
     }, 5000);
 
+    // Preload first few images on mount
+    preloadImage(0);
+    preloadImage(1);
+    preloadImage(2);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [preloadImage]);
+
+  // Handle image load state
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
+  const handleImageLoadStart = () => {
+    setIsImageLoading(true);
+  };
 
   return (
     <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden" data-testid="hero-section">
@@ -56,7 +106,7 @@ export default function HeroSection() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.6 }}
           >
             <div className="inline-flex items-center gap-2 text-[#6B4F8C] text-xs tracking-[0.3em] uppercase mb-6">
               <Sparkles size={14} />
@@ -123,39 +173,54 @@ export default function HeroSection() {
             </div>
           </motion.div>
 
-          {/* Right side - Scrolling Images Carousel */}
+          {/* Right side - Optimized Scrolling Images Carousel */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] lg:aspect-auto lg:h-[500px]"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] lg:aspect-auto lg:h-[500px] bg-gray-100"
           >
-            {/* Main scrolling image */}
+            {/* Loading skeleton */}
+            {isImageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+                <div className="w-10 h-10 border-4 border-[#6B4F8C] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+            
+            {/* Main scrolling image with lazy loading */}
             <motion.img
               key={currentImageIndex}
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.5 }}
-              src={SCROLLING_IMAGES[currentImageIndex]}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              src={SCROLLING_IMAGES[currentImageIndex].src}
               alt="Celebration decor"
+              loading="eager"
+              decoding="async"
+              onLoadStart={handleImageLoadStart}
+              onLoad={handleImageLoad}
               className="w-full h-full object-cover"
+              style={{ willChange: "transform, opacity" }}
             />
             
             {/* Gradient overlay on image */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
             
             {/* Image counter indicator */}
-            <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs">
+            <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs z-20">
               {currentImageIndex + 1} / {SCROLLING_IMAGES.length}
             </div>
             
             {/* Dot indicators */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
               {SCROLLING_IMAGES.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setCurrentImageIndex(idx)}
+                  onClick={() => {
+                    setCurrentImageIndex(idx);
+                    preloadImage(idx);
+                  }}
                   className={`transition-all duration-300 rounded-full ${
                     idx === currentImageIndex 
                       ? "w-8 h-2 bg-[#6B4F8C]" 

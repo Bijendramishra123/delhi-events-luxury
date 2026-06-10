@@ -64,3 +64,5 @@ test_reports/
 # System files
 Thumbs.db
 .desktop
+backend/.env.local
+frontend/.env.local
