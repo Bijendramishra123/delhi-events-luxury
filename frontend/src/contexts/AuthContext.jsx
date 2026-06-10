@@ -1,3 +1,4 @@
+
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api from "../lib/api";
 
@@ -38,7 +39,31 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       if (isDev) console.warn("Logout request failed:", err?.response?.status);
     }
+    
+    // Clear user state
     setUser(null);
+    
+    // Clear all localStorage items
+    localStorage.clear();
+    
+    // Clear all sessionStorage items
+    sessionStorage.clear();
+    
+    // Clear all cookies
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
+    // Clear any auth related items specifically
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("admin_token");
+    sessionStorage.removeItem("token");
+    
+    if (isDev) console.log("Logout successful, all storage cleared");
   }, []);
 
   const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
