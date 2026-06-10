@@ -649,6 +649,8 @@ app.add_middleware(
         "http://localhost:8000",
         "https://delhi-events-backend.onrender.com",
         "https://delhi-events-luxury.vercel.app",
+        "https://www.decodiaries.com",      # <-- ADD THIS
+        "https://decodiaries.com",           # <-- ADD THIS
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
