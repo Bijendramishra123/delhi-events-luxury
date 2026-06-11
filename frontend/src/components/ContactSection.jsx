@@ -1,22 +1,49 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, MessageCircle, Mail, Phone, MapPin, Sparkles } from "lucide-react";
+import { Send, MessageCircle, Mail, Phone, MapPin, Sparkles, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import api, { buildWhatsAppLink, openWhatsApp, formatApiErrorDetail } from "../lib/api";
 
-// UPDATED: Removed Wedding, Engagement, Housewarming. Added Haldi, Mehndi
 const EVENT_TYPES = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Other"];
 const BUDGETS = ["Under ₹1L", "₹1L - ₹3L", "₹3L - ₹7L", "₹7L - ₹15L", "₹15L+"];
+
+// Validation functions
+const validateName = (name) => {
+  if (!name) return "Name is required";
+  if (name.length < 2) return "Name must be at least 2 characters";
+  if (name.length > 50) return "Name must be less than 50 characters";
+  if (!/^[a-zA-Z\s\-'.]+$/.test(name)) return "Name can only contain letters, spaces, hyphens, and apostrophes";
+  return null;
+};
+
+const validatePhone = (phone) => {
+  if (!phone) return "Mobile number is required";
+  if (!/^\d{10}$/.test(phone)) return "Mobile number must be exactly 10 digits";
+  return null;
+};
+
+const validateEmail = (email) => {
+  if (!email) return null; // Email is optional
+  if (email.length > 100) return "Email must be less than 100 characters";
+  if (!/^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/.test(email)) return "Please enter a valid email address";
+  return null;
+};
+
+const validateMessage = (message) => {
+  if (message.length > 5000) return "Message must be less than 5000 characters";
+  return null;
+};
 
 export default function ContactSection({ whatsapp = "918796306375" }) {
   const [form, setForm] = useState({ 
     name: "", phone: "", email: "", event_type: "", event_date: "", location: "", budget: "", message: "" 
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [packageInfo, setPackageInfo] = useState(null);
 
-  // Check for package info from sessionStorage
   useEffect(() => {
     const stored = sessionStorage.getItem("inquiryPackage");
     if (stored) {
@@ -36,25 +63,81 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
     }
   }, []);
 
-  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const validateField = (name, value) => {
+    switch (name) {
+      case "name": return validateName(value);
+      case "phone": return validatePhone(value);
+      case "email": return validateEmail(value);
+      case "message": return validateMessage(value);
+      default: return null;
+    }
+  };
+
+  const update = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }));
+    // Clear error when user starts typing
+    if (errors[k]) {
+      setErrors(prev => ({ ...prev, [k]: null }));
+    }
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const error = validateField(field, form[field]);
+    if (error) {
+      setErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.event_type) {
-      toast.error("Please fill in your name, phone number and event type.");
+    
+    // Validate all fields
+    const newErrors = {};
+    newErrors.name = validateName(form.name);
+    newErrors.phone = validatePhone(form.phone);
+    newErrors.email = validateEmail(form.email);
+    newErrors.message = validateMessage(form.message);
+    
+    setErrors(newErrors);
+    setTouched({ name: true, phone: true, email: true, message: true });
+    
+    // Check if any errors exist
+    if (newErrors.name || newErrors.phone || newErrors.email || newErrors.message) {
+      toast.error("Please fix the errors in the form");
       return;
     }
+    
+    if (!form.event_type) {
+      toast.error("Please select an event type");
+      return;
+    }
+    
     setSubmitting(true);
     try {
       await api.post("/leads", form);
       toast.success("Thank you! We'll reach out to you within 24 hours.");
       setForm({ name: "", phone: "", email: "", event_type: "", event_date: "", location: "", budget: "", message: "" });
       setPackageInfo(null);
+      setErrors({});
+      setTouched({});
     } catch (err) {
       toast.error(formatApiErrorDetail(err.response?.data?.detail) || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Restrict phone input to only numbers
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+    update("phone", value);
+  };
+
+  // Restrict name input to letters and basic punctuation
+  const handleNameChange = (e) => {
+    const value = e.target.value.replace(/[^a-zA-Z\s\-'.]/g, '');
+    update("name", value);
   };
 
   const whatsappMsg = `Hello Team,\n\nI would like to inquire about an event.\n\nName: ${form.name}\nEvent Type: ${form.event_type}\nEvent Date: ${form.event_date}\nLocation: ${form.location}\nBudget: ${form.budget}\n\nMessage: ${form.message}\n\nPlease contact me.`;
@@ -133,7 +216,7 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
             </a>
           </motion.div>
 
-          {/* Right side - Form */}
+          {/* Right side - Form with Validation */}
           <motion.form
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -141,38 +224,64 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
             transition={{ duration: 0.5 }}
             onSubmit={submit}
             className="bg-white rounded-2xl p-5 md:p-8 shadow-lg"
+            noValidate
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              {/* Full Name */}
+              <div className="sm:col-span-2">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Full Name *</label>
                 <input
                   value={form.name}
-                  onChange={(e) => update("name", e.target.value)}
-                  className="w-full border-b-2 border-gray-200 focus:border-[#6B4F8C] outline-none py-2 text-gray-700 transition"
-                  placeholder="Your name"
+                  onChange={(e) => handleNameChange(e)}
+                  onBlur={() => handleBlur("name")}
+                  className={`w-full border-b-2 py-2 text-gray-700 transition outline-none ${
+                    errors.name && touched.name ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-[#6B4F8C]"
+                  }`}
+                  placeholder="Your full name"
                 />
+                {errors.name && touched.name && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {errors.name}</p>
+                )}
               </div>
-              <div>
+
+              {/* Mobile Number */}
+              <div className="sm:col-span-2">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Mobile Number *</label>
                 <input
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  className="w-full border-b-2 border-gray-200 focus:border-[#6B4F8C] outline-none py-2 text-gray-700 transition"
-                  placeholder="10-digit number"
+                  onChange={handlePhoneChange}
+                  onBlur={() => handleBlur("phone")}
+                  className={`w-full border-b-2 py-2 text-gray-700 transition outline-none ${
+                    errors.phone && touched.phone ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-[#6B4F8C]"
+                  }`}
+                  placeholder="10-digit mobile number"
                 />
+                {errors.phone && touched.phone && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {errors.phone}</p>
+                )}
               </div>
-              <div>
+
+              {/* Email */}
+              <div className="sm:col-span-2">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Email</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => update("email", e.target.value)}
-                  className="w-full border-b-2 border-gray-200 focus:border-[#6B4F8C] outline-none py-2 text-gray-700 transition"
+                  onBlur={() => handleBlur("email")}
+                  className={`w-full border-b-2 py-2 text-gray-700 transition outline-none ${
+                    errors.email && touched.email ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-[#6B4F8C]"
+                  }`}
                   placeholder="your@email.com"
                 />
+                {errors.email && touched.email && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {errors.email}</p>
+                )}
               </div>
-              <div>
+
+              {/* Event Type */}
+              <div className="sm:col-span-2">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Event Type *</label>
                 <select
                   value={form.event_type}
@@ -185,7 +294,9 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
                   ))}
                 </select>
               </div>
-              <div>
+
+              {/* Event Date */}
+              <div className="sm:col-span-1">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Event Date</label>
                 <input
                   type="date"
@@ -194,7 +305,9 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
                   className="w-full border-b-2 border-gray-200 focus:border-[#6B4F8C] outline-none py-2 text-gray-700 transition"
                 />
               </div>
-              <div>
+
+              {/* Location */}
+              <div className="sm:col-span-1">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Location</label>
                 <input
                   value={form.location}
@@ -203,6 +316,8 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
                   placeholder="City / Venue"
                 />
               </div>
+
+              {/* Budget Range */}
               <div className="sm:col-span-2">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Budget Range</label>
                 <select
@@ -216,15 +331,27 @@ export default function ContactSection({ whatsapp = "918796306375" }) {
                   ))}
                 </select>
               </div>
+
+              {/* Your Vision */}
               <div className="sm:col-span-2">
                 <label className="text-xs uppercase tracking-wider text-gray-500 block mb-1">Your Vision</label>
                 <textarea
                   value={form.message}
                   onChange={(e) => update("message", e.target.value)}
+                  onBlur={() => handleBlur("message")}
                   rows={3}
-                  className="w-full border-b-2 border-gray-200 focus:border-[#6B4F8C] outline-none py-2 text-gray-700 transition resize-none"
-                  placeholder="Tell us about your dream celebration..."
+                  maxLength={5000}
+                  className={`w-full border-b-2 py-2 text-gray-700 transition resize-none outline-none ${
+                    errors.message && touched.message ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-[#6B4F8C]"
+                  }`}
+                  placeholder="Tell us about your dream celebration... (Max 5000 characters)"
                 />
+                <div className="flex justify-between mt-1">
+                  {errors.message && touched.message && (
+                    <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.message}</p>
+                  )}
+                  <p className="text-xs text-gray-400 ml-auto">{form.message.length}/5000 characters</p>
+                </div>
               </div>
             </div>
 
