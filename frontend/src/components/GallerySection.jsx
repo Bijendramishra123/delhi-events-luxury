@@ -1,11 +1,54 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Sparkles, Flower2, Cake, Baby, Star, Briefcase, Calendar, Music } from "lucide-react";
 import api from "../lib/api";
 
-// UPDATED CATEGORIES — Removed Wedding, Engagement, Housewarming
-const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+const CATEGORIES = [
+  { id: "All", name: "All", icon: Sparkles, fullName: "All Events" },
+  { id: "Haldi", name: "Haldi", icon: Flower2, fullName: "Haldi Ceremony" },
+  { id: "Mehndi", name: "Mehndi", icon: Music, fullName: "Mehndi Night" },
+  { id: "Birthday", name: "Birthday", icon: Cake, fullName: "Birthday Party" },
+  { id: "Anniversary", name: "Anniversary", icon: Calendar, fullName: "Anniversary" },
+  { id: "Baby Shower", name: "Baby Shower", icon: Baby, fullName: "Baby Shower" },
+  { id: "Corporate", name: "Corporate", icon: Briefcase, fullName: "Corporate Events" },
+];
+
+const CategoryButton = ({ category, isActive, onClick }) => {
+  const Icon = category.icon;
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onClick(category.id)}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onTouchStart={() => setShowTooltip(true)}
+        onTouchEnd={() => setTimeout(() => setShowTooltip(false), 1000)}
+        className={`flex flex-col items-center justify-center gap-1 px-3 md:px-5 py-2 rounded-xl transition-all duration-300 min-w-[60px] md:min-w-[80px] active:scale-95 ${
+          isActive
+            ? "bg-[#6B4F8C] text-white shadow-md"
+            : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
+        }`}
+      >
+        <Icon size={18} className="md:w-5 md:h-5" />
+        <span className="text-[10px] md:text-xs font-medium">{category.name}</span>
+      </button>
+      
+      {showTooltip && category.id !== "All" && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 5 }}
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 bg-gray-800 text-white text-[10px] rounded whitespace-nowrap z-10 pointer-events-none"
+        >
+          {category.fullName}
+        </motion.div>
+      )}
+    </div>
+  );
+};
 
 export default function GallerySection() {
   const [items, setItems] = useState([]);
@@ -16,7 +59,13 @@ export default function GallerySection() {
 
   useEffect(() => {
     api.get("/gallery")
-      .then(res => { setItems(res.data); setLoading(false); })
+      .then(res => { 
+        // Filter out old categories if needed
+        const allowedCategories = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+        const filteredItems = res.data.filter(item => allowedCategories.includes(item.category));
+        setItems(filteredItems);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -29,17 +78,13 @@ export default function GallerySection() {
     setSelectedImage(filtered[index]);
   };
 
-  const closeLightbox = () => {
-    setSelectedImage(null);
-  };
-
+  const closeLightbox = () => setSelectedImage(null);
   const nextImage = () => {
     if (currentIndex < filtered.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setSelectedImage(filtered[currentIndex + 1]);
     }
   };
-
   const prevImage = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
@@ -62,7 +107,6 @@ export default function GallerySection() {
   return (
     <section id="gallery" className="py-16 md:py-20 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Header */}
         <div className="text-center mb-10 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-[#6B4F8C]/10 rounded-full px-4 py-2 mb-4">
             <Sparkles className="w-4 h-4 text-[#6B4F8C]" />
@@ -74,24 +118,17 @@ export default function GallerySection() {
           <p className="text-gray-500 text-sm md:text-base mt-3">Explore our beautiful collection of celebration decor</p>
         </div>
 
-        {/* Category Filters - Horizontal Scroll on Mobile */}
-        <div className="flex flex-nowrap md:flex-wrap gap-2 mb-8 md:mb-12 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              onClick={() => setFilter(c)}
-              className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 ${
-                filter === c
-                  ? "bg-[#6B4F8C] text-white shadow-md"
-                  : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
-              }`}
-            >
-              {c === "All" ? "ALL EVENTS" : c.toUpperCase()}
-            </button>
+        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 md:mb-12">
+          {CATEGORIES.map((category) => (
+            <CategoryButton
+              key={category.id}
+              category={category}
+              isActive={filter === category.id}
+              onClick={setFilter}
+            />
           ))}
         </div>
 
-        {/* Gallery Grid */}
         {filtered.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-gray-500">No images in this category yet.</p>
@@ -126,38 +163,22 @@ export default function GallerySection() {
         )}
       </div>
 
-      {/* Lightbox Modal */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center" onClick={closeLightbox}>
           <button className="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2" onClick={closeLightbox}>
             <X size={30} />
           </button>
-          
-          <button 
-            className="absolute left-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
-            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-            disabled={currentIndex === 0}
-          >
+          <button className="absolute left-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30" onClick={(e) => { e.stopPropagation(); prevImage(); }} disabled={currentIndex === 0}>
             <ChevronLeft size={30} />
           </button>
-          
           <div className="max-w-4xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={selectedImage.image} 
-              alt={selectedImage.title} 
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-            />
+            <img src={selectedImage.image} alt={selectedImage.title} className="w-full h-auto max-h-[80vh] object-contain rounded-lg" />
             <div className="text-center mt-4 text-white">
               <p className="text-sm uppercase tracking-wider text-[#BFA2DB]">{selectedImage.category}</p>
               <p className="text-lg font-heading mt-1">{selectedImage.title}</p>
             </div>
           </div>
-          
-          <button 
-            className="absolute right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
-            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-            disabled={currentIndex === filtered.length - 1}
-          >
+          <button className="absolute right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30" onClick={(e) => { e.stopPropagation(); nextImage(); }} disabled={currentIndex === filtered.length - 1}>
             <ChevronRight size={30} />
           </button>
         </div>
