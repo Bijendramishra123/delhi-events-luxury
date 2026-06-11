@@ -3,10 +3,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2, X, Upload, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import api, { getActiveBackend } from "../../lib/api";
+import api from "../../lib/api";
 
-const CATEGORIES = ["Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming"];
-const EMPTY = { image: "", category: "Wedding", title: "", display_order: 0 };
+const CATEGORIES = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+const EMPTY = { image: "", category: "Haldi", title: "", display_order: 0 };
 
 export default function AdminGallery() {
   const [items, setItems] = useState([]);
@@ -19,7 +19,10 @@ export default function AdminGallery() {
     try {
       setLoading(true);
       const { data } = await api.get("/admin/gallery");
-      setItems(data);
+      // Filter only allowed categories
+      const allowedCategories = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+      const filteredItems = data.filter(item => allowedCategories.includes(item.category));
+      setItems(filteredItems);
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("Failed to load gallery:", err);
     } finally {
@@ -51,7 +54,6 @@ export default function AdminGallery() {
     fd.append("file", file);
     try {
       const { data } = await api.post("/admin/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      // The backend returns { path: url, url: url }
       const imageUrl = data.url || data.path;
       setEditing({ ...editing, image: imageUrl });
       toast.success("Uploaded to Cloudinary");
@@ -88,7 +90,7 @@ export default function AdminGallery() {
         </button>
       </div>
 
-      {/* Gallery Grid */}
+      {/* Gallery Grid - Square aspect ratio */}
       {items.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl">
           <ImageIcon size={48} className="mx-auto text-gray-300 mb-4" />
@@ -103,20 +105,23 @@ export default function AdminGallery() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.03 }}
-              className="relative group rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              className="relative group rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               data-testid={`admin-gal-${g.id}`}
             >
               <button
                 onClick={() => setPreviewImage(g.image)}
                 className="w-full cursor-pointer"
               >
-                <img 
-                  src={g.image} 
-                  alt={g.title || g.category} 
-                  className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                  onError={(e) => { e.target.src = "https://placehold.co/400x400?text=Image+Error"; }}
-                />
+                {/* Fixed square aspect ratio */}
+                <div className="aspect-square w-full overflow-hidden bg-gray-100">
+                  <img 
+                    src={g.image} 
+                    alt={g.title || g.category} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                    onError={(e) => { e.target.src = "https://placehold.co/600x600?text=Image+Error"; }}
+                  />
+                </div>
               </button>
               <div className="p-2 md:p-3">
                 <div className="text-[10px] md:text-xs uppercase tracking-wider text-[#666]">{g.category}</div>
@@ -204,9 +209,16 @@ export default function AdminGallery() {
                       <input type="file" accept="image/*" data-testid="gal-upload" className="hidden" onChange={(e) => uploadImage(e.target.files[0])} />
                     </label>
                   </div>
+                  {/* Image preview with square aspect ratio */}
                   {editing.image && (
-                    <img src={editing.image} alt="Preview" className="mt-3 w-full h-32 md:h-40 object-cover rounded-lg" 
-                         onError={(e) => { e.target.src = "https://placehold.co/400x400?text=Invalid+URL"; }} />
+                    <div className="mt-3 w-32 h-32 rounded-lg overflow-hidden bg-gray-100">
+                      <img 
+                        src={editing.image} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.src = "https://placehold.co/400x400?text=Invalid+URL"; }} 
+                      />
+                    </div>
                   )}
                 </div>
                 

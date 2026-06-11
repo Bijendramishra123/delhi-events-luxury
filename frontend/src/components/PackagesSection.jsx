@@ -15,7 +15,7 @@ const CATEGORIES = [
   { id: "Corporate", name: "Corporate", icon: Briefcase, fullName: "Corporate Events" },
 ];
 
-// Lazy Image Component
+// Fixed Lazy Image Component with square aspect ratio
 const LazyImage = ({ src, alt, className }) => {
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef();
@@ -30,14 +30,15 @@ const LazyImage = ({ src, alt, className }) => {
   }, [inView, src]);
 
   return (
-    <div ref={imgRef} className="relative overflow-hidden bg-gray-100 aspect-[4/3]">
+    <div ref={imgRef} className="relative overflow-hidden bg-gray-100 aspect-square w-full">
       {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />}
       {inView && (
         <img
           src={src}
           alt={alt}
           loading="lazy"
-          className={`${className} transition-all duration-700 ${loaded ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
+          className={`${className} w-full h-full object-cover transition-all duration-700 ${loaded ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
+          onError={(e) => { e.target.src = "https://placehold.co/600x600?text=No+Image"; }}
         />
       )}
     </div>
@@ -81,7 +82,6 @@ const CategoryButton = ({ category, isActive, onClick }) => {
         <span className="text-[10px] md:text-xs font-medium">{category.name}</span>
       </button>
       
-      {/* Tooltip for mobile/desktop */}
       <AnimatePresence>
         {showTooltip && category.id !== "All" && (
           <motion.div
@@ -185,12 +185,11 @@ export default function PackagesSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
-                <div className="aspect-[4/3] bg-gray-200" />
+                <div className="aspect-square bg-gray-200" />
                 <div className="p-4 space-y-3">
                   <div className="h-3 bg-gray-200 rounded w-1/4" />
                   <div className="h-5 bg-gray-200 rounded w-3/4" />
                   <div className="h-3 bg-gray-200 rounded w-full" />
-                  <div className="h-3 bg-gray-200 rounded w-2/3" />
                 </div>
               </div>
             ))}
@@ -218,7 +217,6 @@ export default function PackagesSection() {
           <p className="text-gray-500 text-sm md:text-base mt-2 max-w-2xl mx-auto">Explore our handcrafted packages designed for every special moment</p>
         </div>
 
-        {/* Categories with Icons and Tooltips */}
         <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 md:mb-12">
           {CATEGORIES.map((category) => (
             <CategoryButton
@@ -244,7 +242,7 @@ export default function PackagesSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
-                  className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99]"
+                  className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] flex flex-col h-full"
                 >
                   <LazyImage
                     src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"}
@@ -252,7 +250,7 @@ export default function PackagesSection() {
                     className="w-full h-full object-cover"
                   />
                   
-                  <div className="p-3 md:p-5">
+                  <div className="p-3 md:p-5 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-[10px] md:text-xs uppercase tracking-wide text-[#6B4F8C]/70 font-medium">{p.event_category}</span>
                       <AvailabilityBadge status={p.availability_status} />
@@ -273,7 +271,7 @@ export default function PackagesSection() {
                       )}
                     </ul>
 
-                    <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="mt-auto pt-3 border-t border-gray-100">
                       <div className="flex items-baseline gap-2 mb-3">
                         <span className="text-[10px] text-gray-400">Starting at</span>
                         {p.discount_price ? (

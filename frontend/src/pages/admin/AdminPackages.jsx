@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import api from "../../lib/api";
 
-// UPDATED CATEGORIES — Removed Wedding, Engagement, Housewarming. Added Haldi, Mehndi
 const CATEGORIES = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
 const AVAIL = ["Available", "Limited Availability", "Fully Booked", "Coming Soon"];
 
@@ -26,7 +25,10 @@ export default function AdminPackages() {
     try {
       setLoading(true);
       const { data } = await api.get("/admin/packages");
-      setItems(data);
+      // Filter only allowed categories
+      const allowedCategories = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+      const filteredItems = data.filter(item => allowedCategories.includes(item.event_category));
+      setItems(filteredItems);
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("Failed to load packages:", err);
     } finally {
@@ -75,7 +77,6 @@ export default function AdminPackages() {
     fd.append("file", file);
     try {
       const { data } = await api.post("/admin/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      // Backend returns { path: image_url, url: image_url }
       const imageUrl = data.url || data.path;
       if (field === "cover") {
         setEditing({ ...editing, cover_image: imageUrl });
@@ -130,16 +131,19 @@ export default function AdminPackages() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl transition-all duration-300"
+            className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
             data-testid={`admin-pkg-${p.id}`}
           >
-            <img 
-              src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"} 
-              alt={p.package_name} 
-              className="w-full h-36 md:h-40 object-cover transition-transform duration-500 hover:scale-105"
-              loading="lazy"
-              onError={(e) => { e.target.src = "https://placehold.co/400x300?text=No+Image"; }}
-            />
+            {/* Square image container */}
+            <div className="aspect-square w-full overflow-hidden bg-gray-100">
+              <img 
+                src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"} 
+                alt={p.package_name} 
+                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                loading="lazy"
+                onError={(e) => { e.target.src = "https://placehold.co/600x600?text=No+Image"; }}
+              />
+            </div>
             <div className="p-4 md:p-5">
               <div className="text-[10px] md:text-xs uppercase tracking-wider text-[#666] mb-1">{p.event_category}</div>
               <h3 className="font-heading text-base md:text-lg text-[#6B4F8C] mb-1 truncate">{p.package_name}</h3>
@@ -285,8 +289,10 @@ export default function AdminPackages() {
                     </label>
                   </div>
                   {editing.cover_image && (
-                    <img src={editing.cover_image} alt="Cover" className="mt-3 w-24 h-20 object-cover rounded-lg" 
-                         onError={(e) => { e.target.src = "https://placehold.co/400x300?text=Invalid+URL"; }} />
+                    <div className="mt-3 w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                      <img src={editing.cover_image} alt="Cover" className="w-full h-full object-cover" 
+                           onError={(e) => { e.target.src = "https://placehold.co/400x400?text=Invalid+URL"; }} />
+                    </div>
                   )}
                 </div>
 

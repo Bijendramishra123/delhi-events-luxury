@@ -1,21 +1,20 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Sparkles, Flower2, Cake, Baby, Star, Briefcase, Calendar, Music } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import api from "../lib/api";
 
 const CATEGORIES = [
-  { id: "All", name: "All", icon: Sparkles, fullName: "All Events" },
-  { id: "Haldi", name: "Haldi", icon: Flower2, fullName: "Haldi Ceremony" },
-  { id: "Mehndi", name: "Mehndi", icon: Music, fullName: "Mehndi Night" },
-  { id: "Birthday", name: "Birthday", icon: Cake, fullName: "Birthday Party" },
-  { id: "Anniversary", name: "Anniversary", icon: Calendar, fullName: "Anniversary" },
-  { id: "Baby Shower", name: "Baby Shower", icon: Baby, fullName: "Baby Shower" },
-  { id: "Corporate", name: "Corporate", icon: Briefcase, fullName: "Corporate Events" },
+  { id: "All", name: "All", fullName: "All Events" },
+  { id: "Haldi", name: "Haldi", fullName: "Haldi Ceremony" },
+  { id: "Mehndi", name: "Mehndi", fullName: "Mehndi Night" },
+  { id: "Birthday", name: "Birthday", fullName: "Birthday Party" },
+  { id: "Anniversary", name: "Anniversary", fullName: "Anniversary" },
+  { id: "Baby Shower", name: "Baby Shower", fullName: "Baby Shower" },
+  { id: "Corporate", name: "Corporate", fullName: "Corporate Events" },
 ];
 
 const CategoryButton = ({ category, isActive, onClick }) => {
-  const Icon = category.icon;
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -26,14 +25,13 @@ const CategoryButton = ({ category, isActive, onClick }) => {
         onMouseLeave={() => setShowTooltip(false)}
         onTouchStart={() => setShowTooltip(true)}
         onTouchEnd={() => setTimeout(() => setShowTooltip(false), 1000)}
-        className={`flex flex-col items-center justify-center gap-1 px-3 md:px-5 py-2 rounded-xl transition-all duration-300 min-w-[60px] md:min-w-[80px] active:scale-95 ${
+        className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 ${
           isActive
             ? "bg-[#6B4F8C] text-white shadow-md"
             : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
         }`}
       >
-        <Icon size={18} className="md:w-5 md:h-5" />
-        <span className="text-[10px] md:text-xs font-medium">{category.name}</span>
+        {category.name}
       </button>
       
       {showTooltip && category.id !== "All" && (
@@ -60,7 +58,6 @@ export default function GallerySection() {
   useEffect(() => {
     api.get("/gallery")
       .then(res => { 
-        // Filter out old categories if needed
         const allowedCategories = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
         const filteredItems = res.data.filter(item => allowedCategories.includes(item.category));
         setItems(filteredItems);
@@ -145,13 +142,17 @@ export default function GallerySection() {
                 className="relative group cursor-pointer rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300"
                 onClick={() => openLightbox(idx)}
               >
-                <div className="aspect-square overflow-hidden">
+                {/* Fixed aspect ratio container - 1:1 square */}
+                <div className="aspect-square w-full overflow-hidden bg-gray-100">
                   <img
                     src={item.image}
                     alt={item.title || item.category}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
-                    onError={(e) => { e.target.src = "https://placehold.co/600x600?text=Image+Not+Found"; }}
+                    onError={(e) => { 
+                      e.target.src = "https://placehold.co/600x600?text=Image+Not+Found";
+                      e.target.onerror = null;
+                    }}
                   />
                 </div>
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -163,22 +164,39 @@ export default function GallerySection() {
         )}
       </div>
 
+      {/* Lightbox Modal - Full size preview */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center" onClick={closeLightbox}>
           <button className="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2" onClick={closeLightbox}>
             <X size={30} />
           </button>
-          <button className="absolute left-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30" onClick={(e) => { e.stopPropagation(); prevImage(); }} disabled={currentIndex === 0}>
+          
+          <button 
+            className="absolute left-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
+            onClick={(e) => { e.stopPropagation(); prevImage(); }}
+            disabled={currentIndex === 0}
+          >
             <ChevronLeft size={30} />
           </button>
+          
           <div className="max-w-4xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <img src={selectedImage.image} alt={selectedImage.title} className="w-full h-auto max-h-[80vh] object-contain rounded-lg" />
+            <img 
+              src={selectedImage.image} 
+              alt={selectedImage.title} 
+              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              onError={(e) => { e.target.src = "https://placehold.co/800x600?text=Image+Error"; }}
+            />
             <div className="text-center mt-4 text-white">
               <p className="text-sm uppercase tracking-wider text-[#BFA2DB]">{selectedImage.category}</p>
               <p className="text-lg font-heading mt-1">{selectedImage.title}</p>
             </div>
           </div>
-          <button className="absolute right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30" onClick={(e) => { e.stopPropagation(); nextImage(); }} disabled={currentIndex === filtered.length - 1}>
+          
+          <button 
+            className="absolute right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
+            onClick={(e) => { e.stopPropagation(); nextImage(); }}
+            disabled={currentIndex === filtered.length - 1}
+          >
             <ChevronRight size={30} />
           </button>
         </div>
