@@ -21,14 +21,12 @@ export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user, loading } = useAuth();
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -42,26 +40,42 @@ export default function AdminLayout() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/admin/login");
+    }
+  }, [user, loading, navigate]);
+
   const handleLogout = async () => {
-    // Call logout function from AuthContext
     await logout();
-    // No need to navigate here because logout() does window.location.href
   };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B4F8C]"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header with Toggle */}
+      {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-30 px-4 py-3 flex items-center justify-between">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg hover:bg-gray-100 transition"
+          className="p-2 rounded-lg hover:bg-gray-100 transition active:scale-95"
         >
           <Menu size={24} className="text-[#6B4F8C]" />
         </button>
         <h1 className="font-heading text-xl text-[#6B4F8C]">Admin Panel</h1>
-        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-gray-100 transition">
+        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-red-50 transition active:scale-95">
           <LogOut size={20} className="text-red-500" />
         </button>
       </div>
@@ -131,10 +145,7 @@ export default function AdminLayout() {
       >
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           {sidebarOpen && <h2 className="font-heading text-xl text-[#6B4F8C]">Admin Panel</h2>}
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 transition"
-          >
+          <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-100 transition">
             {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
         </div>

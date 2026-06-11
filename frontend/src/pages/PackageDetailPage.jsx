@@ -7,7 +7,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api, { buildWhatsAppLink, openWhatsApp, formatPrice } from "../lib/api";
 
-// Mobile-Optimized Toast Component
+// Toast Component
 const ToastNotification = ({ message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => onClose(), 3500);
@@ -100,14 +100,26 @@ export default function PackageDetailPage() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Images */}
           <div>
             <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-white">
-              <img src={images[active]} alt={pkg.package_name} className="w-full h-full object-cover" />
+              <img 
+                src={images[active]} 
+                alt={pkg.package_name} 
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.src = "https://placehold.co/800x600?text=No+Image"; }}
+              />
             </div>
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                 {images.map((img, idx) => (
-                  <button key={idx} onClick={() => setActive(idx)} className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${active === idx ? "ring-2 ring-[#6B4F8C]" : "opacity-60 hover:opacity-100"}`}>
+                  <button
+                    key={idx}
+                    onClick={() => setActive(idx)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${
+                      active === idx ? "ring-2 ring-[#6B4F8C]" : "opacity-60 hover:opacity-100"
+                    }`}
+                  >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -115,6 +127,7 @@ export default function PackageDetailPage() {
             )}
           </div>
 
+          {/* Details */}
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#6B4F8C] mb-2">{pkg.event_category}</p>
             <h1 className="font-heading text-3xl md:text-4xl text-[#6B4F8C] mb-3">{pkg.package_name}</h1>
@@ -151,10 +164,19 @@ export default function PackageDetailPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={wa} target="_blank" rel="noopener noreferrer" onClick={(e) => openWhatsApp(e, "918796306375", waMessage)} className="flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-full text-sm font-medium active:scale-95 transition-all">
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => openWhatsApp(e, "918796306375", waMessage)}
+                className="flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-3 rounded-full text-sm font-medium active:scale-95 transition-all"
+              >
                 <MessageCircle size={16} /> WhatsApp Inquiry
               </a>
-              <button onClick={handleInquiry} className="flex items-center justify-center gap-2 bg-[#6B4F8C] text-white px-5 py-3 rounded-full text-sm font-medium active:scale-95 transition-all">
+              <button
+                onClick={handleInquiry}
+                className="flex items-center justify-center gap-2 bg-[#6B4F8C] text-white px-5 py-3 rounded-full text-sm font-medium active:scale-95 transition-all"
+              >
                 <Send size={16} /> Send Inquiry
               </button>
             </div>

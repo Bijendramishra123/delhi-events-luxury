@@ -51,10 +51,12 @@ export default function AdminGallery() {
     fd.append("file", file);
     try {
       const { data } = await api.post("/admin/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      setEditing({ ...editing, image: `${getActiveBackend()}${data.url}` });
-      toast.success("Uploaded");
+      // The backend returns { path: url, url: url }
+      const imageUrl = data.url || data.path;
+      setEditing({ ...editing, image: imageUrl });
+      toast.success("Uploaded to Cloudinary");
     } catch (e) {
-      toast.error("Upload failed");
+      toast.error("Upload failed: " + (e.response?.data?.detail || e.message));
     } finally { setUploading(false); }
   };
 
@@ -113,6 +115,7 @@ export default function AdminGallery() {
                   alt={g.title || g.category} 
                   className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
+                  onError={(e) => { e.target.src = "https://placehold.co/400x400?text=Image+Error"; }}
                 />
               </button>
               <div className="p-2 md:p-3">
@@ -187,22 +190,23 @@ export default function AdminGallery() {
               
               <div className="p-4 md:p-6 space-y-4">
                 <div>
-                  <label className="text-xs uppercase tracking-wider text-[#666] block mb-2">Image URL or upload</label>
+                  <label className="text-xs uppercase tracking-wider text-[#666] block mb-2">Upload Image</label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input 
                       data-testid="gal-image-url" 
                       value={editing.image} 
                       onChange={(e) => setEditing({ ...editing, image: e.target.value })} 
-                      placeholder="https://example.com/image.jpg"
+                      placeholder="Or paste image URL directly"
                       className="flex-1 border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]"
                     />
                     <label className="cursor-pointer bg-[#BFA2DB]/20 text-[#6B4F8C] px-4 py-2 rounded-full text-sm inline-flex items-center justify-center gap-2 hover:bg-[#BFA2DB]/40 transition whitespace-nowrap">
-                      <Upload size={14} /> {uploading ? "Uploading..." : "Upload"}
+                      <Upload size={14} /> {uploading ? "Uploading..." : "Upload Image"}
                       <input type="file" accept="image/*" data-testid="gal-upload" className="hidden" onChange={(e) => uploadImage(e.target.files[0])} />
                     </label>
                   </div>
                   {editing.image && (
-                    <img src={editing.image} alt="" className="mt-3 w-full h-32 md:h-40 object-cover rounded-lg" />
+                    <img src={editing.image} alt="Preview" className="mt-3 w-full h-32 md:h-40 object-cover rounded-lg" 
+                         onError={(e) => { e.target.src = "https://placehold.co/400x400?text=Invalid+URL"; }} />
                   )}
                 </div>
                 

@@ -21,7 +21,7 @@ export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user, loading } = useAuth();
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -44,10 +44,10 @@ export default function AdminLayout() {
 
   // If no user, redirect to login
   useEffect(() => {
-    if (!user && !loading) {
+    if (!loading && !user) {
       navigate("/admin/login");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -55,6 +55,15 @@ export default function AdminLayout() {
   };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B4F8C]"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
@@ -66,12 +75,12 @@ export default function AdminLayout() {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-30 px-4 py-3 flex items-center justify-between">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg hover:bg-gray-100 transition"
+          className="p-2 rounded-lg hover:bg-gray-100 transition active:scale-95"
         >
           <Menu size={24} className="text-[#6B4F8C]" />
         </button>
         <h1 className="font-heading text-xl text-[#6B4F8C]">Admin Panel</h1>
-        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-red-50 transition">
+        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-red-50 transition active:scale-95">
           <LogOut size={20} className="text-red-500" />
         </button>
       </div>

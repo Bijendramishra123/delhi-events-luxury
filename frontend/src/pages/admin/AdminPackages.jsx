@@ -3,13 +3,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Copy, Upload, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import api, { getActiveBackend } from "../../lib/api";
+import api from "../../lib/api";
 
-const CATEGORIES = ["Wedding", "Birthday", "Anniversary", "Baby Shower", "Corporate", "Engagement", "Housewarming"];
+// UPDATED CATEGORIES — Removed Wedding, Engagement, Housewarming. Added Haldi, Mehndi
+const CATEGORIES = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
 const AVAIL = ["Available", "Limited Availability", "Fully Booked", "Coming Soon"];
 
 const EMPTY = {
-  package_name: "", event_category: "Wedding", cover_image: "", gallery_images: [],
+  package_name: "", event_category: "Haldi", cover_image: "", gallery_images: [],
   price: 0, discount_price: null, description: "", services: [],
   availability_status: "Available", featured: false, visible: true, display_order: 0
 };
@@ -74,12 +75,16 @@ export default function AdminPackages() {
     fd.append("file", file);
     try {
       const { data } = await api.post("/admin/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      const url = `${getActiveBackend()}${data.url}`;
-      if (field === "cover") setEditing({ ...editing, cover_image: url });
-      else setEditing({ ...editing, gallery_images: [...(editing.gallery_images || []), url] });
-      toast.success("Image uploaded");
+      // Backend returns { path: image_url, url: image_url }
+      const imageUrl = data.url || data.path;
+      if (field === "cover") {
+        setEditing({ ...editing, cover_image: imageUrl });
+      } else {
+        setEditing({ ...editing, gallery_images: [...(editing.gallery_images || []), imageUrl] });
+      }
+      toast.success("Image uploaded to Cloudinary");
     } catch (e) {
-      toast.error("Upload failed");
+      toast.error("Upload failed: " + (e.response?.data?.detail || e.message));
     } finally {
       setUploading(false);
     }
@@ -107,7 +112,6 @@ export default function AdminPackages() {
       data-testid="admin-packages"
       className="pb-8"
     >
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="font-heading text-3xl md:text-4xl text-[#6B4F8C]">Packages</h1>
         <button
@@ -119,7 +123,6 @@ export default function AdminPackages() {
         </button>
       </div>
 
-      {/* Packages Grid - Mobile Responsive */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {items.map((p, idx) => (
           <motion.div
@@ -135,6 +138,7 @@ export default function AdminPackages() {
               alt={p.package_name} 
               className="w-full h-36 md:h-40 object-cover transition-transform duration-500 hover:scale-105"
               loading="lazy"
+              onError={(e) => { e.target.src = "https://placehold.co/400x300?text=No+Image"; }}
             />
             <div className="p-4 md:p-5">
               <div className="text-[10px] md:text-xs uppercase tracking-wider text-[#666] mb-1">{p.event_category}</div>
@@ -149,7 +153,6 @@ export default function AdminPackages() {
                 {p.availability_status}
               </div>
               
-              {/* Action Buttons */}
               <div className="flex gap-2">
                 <button 
                   onClick={() => setEditing({ ...p, services: (p.services || []).join("\n") })} 
@@ -174,7 +177,6 @@ export default function AdminPackages() {
                 </button>
               </div>
               
-              {/* Expand/Collapse for services on mobile */}
               <button
                 onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}
                 className="mt-3 w-full flex items-center justify-center gap-1 text-xs text-gray-500 hover:text-[#6B4F8C] transition md:hidden"
@@ -206,7 +208,7 @@ export default function AdminPackages() {
         ))}
       </div>
 
-      {/* Edit Modal - Responsive */}
+      {/* Edit Modal */}
       <AnimatePresence>
         {editing && (
           <motion.div
@@ -276,14 +278,15 @@ export default function AdminPackages() {
                 <div>
                   <label className="text-xs uppercase tracking-wider text-gray-500 block mb-2">Cover Image</label>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <input data-testid="pkg-cover-url" value={editing.cover_image} onChange={(e) => setEditing({ ...editing, cover_image: e.target.value })} className="flex-1 border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]" />
+                    <input data-testid="pkg-cover-url" value={editing.cover_image} onChange={(e) => setEditing({ ...editing, cover_image: e.target.value })} className="flex-1 border-b-2 border-[#BFA2DB]/40 py-2 focus:outline-none focus:border-[#6B4F8C]" placeholder="Or paste image URL" />
                     <label className="cursor-pointer bg-[#BFA2DB]/20 text-[#6B4F8C] px-4 py-2 rounded-full text-sm inline-flex items-center justify-center gap-2 hover:bg-[#BFA2DB]/40 transition whitespace-nowrap">
                       <Upload size={14} /> {uploading ? "Uploading..." : "Upload"}
                       <input type="file" accept="image/*" className="hidden" data-testid="pkg-cover-upload" onChange={(e) => uploadImage(e.target.files[0], "cover")} />
                     </label>
                   </div>
                   {editing.cover_image && (
-                    <img src={editing.cover_image} alt="Cover" className="mt-3 w-24 h-20 object-cover rounded-lg" />
+                    <img src={editing.cover_image} alt="Cover" className="mt-3 w-24 h-20 object-cover rounded-lg" 
+                         onError={(e) => { e.target.src = "https://placehold.co/400x300?text=Invalid+URL"; }} />
                   )}
                 </div>
 
