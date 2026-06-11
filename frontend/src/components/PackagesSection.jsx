@@ -50,12 +50,10 @@ function AvailabilityBadge({ status }) {
   );
 }
 
-// Mobile-Optimized Toast Notification Component
+// Toast Notification Component
 const ToastNotification = ({ message, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3500);
+    const timer = setTimeout(() => onClose(), 3500);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -77,10 +75,7 @@ const ToastNotification = ({ message, onClose }) => {
             <p className="text-xs text-white/80 mt-0.5">✨ Redirecting you to contact section...</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition active:scale-95 flex-shrink-0"
-        >
+        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition active:scale-95 flex-shrink-0">
           <X size={16} />
         </button>
       </div>
@@ -99,7 +94,13 @@ export default function PackagesSection() {
 
   useEffect(() => {
     api.get("/packages")
-      .then(res => { setPackages(res.data); setLoading(false); })
+      .then(res => { 
+        // Filter out Wedding, Engagement, Housewarming packages
+        const allowedCategories = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+        const filteredPackages = res.data.filter(pkg => allowedCategories.includes(pkg.event_category));
+        setPackages(filteredPackages);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -130,7 +131,6 @@ export default function PackagesSection() {
     setShowToast(false);
   };
 
-  // Skeleton Loader
   if (loading) {
     return (
       <section id="packages" className="py-16 md:py-24 bg-[#FAF9F6]">
@@ -155,13 +155,11 @@ export default function PackagesSection() {
 
   return (
     <section id="packages" className="py-12 md:py-20 lg:py-24 bg-[#FAF9F6] relative">
-      {/* Toast Notification - Fixed position */}
       <AnimatePresence>
         {showToast && <ToastNotification message={`✨ ${toastMessage} selected! Please fill the contact form below.`} onClose={closeToast} />}
       </AnimatePresence>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Header */}
         <div className="text-center mb-8 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-[#6B4F8C]/10 rounded-full px-3 py-1.5 md:px-4 md:py-2 mb-3">
             <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#6B4F8C]" />
@@ -173,104 +171,109 @@ export default function PackagesSection() {
           <p className="text-gray-500 text-sm md:text-base mt-2 max-w-2xl mx-auto">Explore our handcrafted packages designed for every special moment</p>
         </div>
 
-        {/* Horizontal Scroll Categories */}
         <div className="flex flex-nowrap gap-2 mb-6 md:mb-8 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
           {CATEGORIES.map((c) => (
             <button
               key={c}
               onClick={() => { setFilter(c); setVisibleCount(6); }}
-              className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap touch-manipulation ${
+              className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 ${
                 filter === c
-                  ? "bg-[#6B4F8C] text-white shadow-md active:scale-95"
-                  : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 active:bg-gray-100"
+                  ? "bg-[#6B4F8C] text-white shadow-md"
+                  : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
               }`}
             >
-              {c}
+              {c === "All" ? "ALL" : c.toUpperCase()}
             </button>
           ))}
         </div>
 
-        {/* Packages Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {displayed.map((p, i) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
-              className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99] touch-manipulation"
-            >
-              <LazyImage
-                src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"}
-                alt={p.package_name}
-                className="w-full h-full object-cover"
-              />
-              
-              <div className="p-3 md:p-5">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] md:text-xs uppercase tracking-wide text-[#6B4F8C]/70 font-medium">{p.event_category}</span>
-                  <AvailabilityBadge status={p.availability_status} />
-                </div>
-                
-                <h3 className="font-heading text-base md:text-xl text-[#6B4F8C] font-semibold mb-1 line-clamp-1">{p.package_name}</h3>
-                <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-3 line-clamp-2">{p.description}</p>
-
-                <ul className="space-y-1 mb-3">
-                  {(p.services || []).slice(0, 2).map((s) => (
-                    <li key={s} className="flex items-start gap-1.5 text-xs text-gray-600">
-                      <Check size={12} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{s}</span>
-                    </li>
-                  ))}
-                  {(p.services || []).length > 2 && (
-                    <li className="text-[10px] text-gray-400 pl-5">+{p.services.length - 2} more services</li>
-                  )}
-                </ul>
-
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-[10px] text-gray-400">Starting at</span>
-                    {p.discount_price ? (
-                      <>
-                        <span className="font-heading text-lg md:text-2xl text-[#6B4F8C] font-bold">{formatPrice(p.discount_price)}</span>
-                        <span className="text-xs text-gray-400 line-through">{formatPrice(p.price)}</span>
-                      </>
-                    ) : (
-                      <span className="font-heading text-lg md:text-2xl text-[#6B4F8C] font-bold">{formatPrice(p.price)}</span>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Link
-                      to={`/packages/${p.id}`}
-                      className="flex-1 flex items-center justify-center gap-1 bg-[#6B4F8C] text-white px-3 py-2 rounded-full text-[11px] md:text-xs font-medium uppercase tracking-wider active:scale-95 transition-all"
-                    >
-                      Details <ArrowRight size={12} />
-                    </Link>
-                    <button
-                      onClick={() => handleInquiry(p)}
-                      className="flex items-center justify-center gap-1 bg-[#25D366] text-white px-3 py-2 rounded-full text-[11px] md:text-xs font-medium uppercase tracking-wider active:scale-95 transition-all whitespace-nowrap touch-manipulation"
-                    >
-                      <Send size={12} /> Enquire
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Load More */}
-        {hasMore && (
-          <div className="text-center mt-8 md:mt-10">
-            <button
-              onClick={() => setVisibleCount(prev => prev + 6)}
-              className="inline-flex items-center gap-2 px-5 md:px-6 py-2 md:py-2.5 bg-white border border-[#6B4F8C] text-[#6B4F8C] rounded-full text-xs md:text-sm font-medium active:scale-95 transition-all touch-manipulation"
-            >
-              Load More <ArrowRight size={14} />
-            </button>
+        {filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-gray-500">No packages available in this category.</p>
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {displayed.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
+                  className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99]"
+                >
+                  <LazyImage
+                    src={p.cover_image || "https://images.pexels.com/photos/13156145/pexels-photo-13156145.jpeg"}
+                    alt={p.package_name}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  <div className="p-3 md:p-5">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] md:text-xs uppercase tracking-wide text-[#6B4F8C]/70 font-medium">{p.event_category}</span>
+                      <AvailabilityBadge status={p.availability_status} />
+                    </div>
+                    
+                    <h3 className="font-heading text-base md:text-xl text-[#6B4F8C] font-semibold mb-1 line-clamp-1">{p.package_name}</h3>
+                    <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-3 line-clamp-2">{p.description}</p>
+
+                    <ul className="space-y-1 mb-3">
+                      {(p.services || []).slice(0, 2).map((s) => (
+                        <li key={s} className="flex items-start gap-1.5 text-xs text-gray-600">
+                          <Check size={12} className="text-[#BFA2DB] mt-0.5 flex-shrink-0" />
+                          <span className="line-clamp-1">{s}</span>
+                        </li>
+                      ))}
+                      {(p.services || []).length > 2 && (
+                        <li className="text-[10px] text-gray-400 pl-5">+{p.services.length - 2} more services</li>
+                      )}
+                    </ul>
+
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-[10px] text-gray-400">Starting at</span>
+                        {p.discount_price ? (
+                          <>
+                            <span className="font-heading text-lg md:text-2xl text-[#6B4F8C] font-bold">{formatPrice(p.discount_price)}</span>
+                            <span className="text-xs text-gray-400 line-through">{formatPrice(p.price)}</span>
+                          </>
+                        ) : (
+                          <span className="font-heading text-lg md:text-2xl text-[#6B4F8C] font-bold">{formatPrice(p.price)}</span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Link
+                          to={`/packages/${p.id}`}
+                          className="flex-1 flex items-center justify-center gap-1 bg-[#6B4F8C] text-white px-3 py-2 rounded-full text-[11px] md:text-xs font-medium uppercase tracking-wider active:scale-95 transition-all"
+                        >
+                          Details <ArrowRight size={12} />
+                        </Link>
+                        <button
+                          onClick={() => handleInquiry(p)}
+                          className="flex items-center justify-center gap-1 bg-[#25D366] text-white px-3 py-2 rounded-full text-[11px] md:text-xs font-medium uppercase tracking-wider active:scale-95 transition-all whitespace-nowrap"
+                        >
+                          <Send size={12} /> Enquire
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="text-center mt-8 md:mt-10">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 6)}
+                  className="inline-flex items-center gap-2 px-5 md:px-6 py-2 md:py-2.5 bg-white border border-[#6B4F8C] text-[#6B4F8C] rounded-full text-xs md:text-sm font-medium active:scale-95 transition-all"
+                >
+                  Load More <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
