@@ -20,8 +20,7 @@ export default function Navbar() {
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 30);
-      const path = window.location.pathname;
-      if (path === "/") {
+      if (window.location.pathname === "/") {
         for (const link of links) {
           if (link.sectionId) {
             const el = document.getElementById(link.sectionId);
@@ -41,38 +40,31 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollToSection = (sectionId) => {
-    if (!sectionId) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  const handleNavClick = (link) => {
+  // Pure JavaScript function for navigation
+  const navigateTo = (sectionId) => {
     setOpen(false);
     
-    const currentPath = window.location.pathname;
-    
-    if (!link.sectionId) {
-      // Home
-      if (currentPath !== "/") {
-        window.location.href = "/";
+    setTimeout(() => {
+      if (!sectionId || sectionId === "") {
+        // Go to home
+        if (window.location.pathname !== "/") {
+          window.location.href = "/";
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
       } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Go to section
+        if (window.location.pathname !== "/") {
+          window.location.href = `/#${sectionId}`;
+        } else {
+          const element = document.getElementById(sectionId);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+            window.history.pushState(null, "", `#${sectionId}`);
+          }
+        }
       }
-    } else {
-      // Section
-      if (currentPath !== "/") {
-        window.location.href = `/#${link.sectionId}`;
-      } else {
-        scrollToSection(link.sectionId);
-        window.history.pushState(null, "", `#${link.sectionId}`);
-      }
-    }
+    }, 50);
   };
 
   const navClass = `fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
@@ -85,27 +77,20 @@ export default function Navbar() {
     <nav className={navClass}>
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
-        <button
-          onClick={() => {
-            if (window.location.pathname !== "/") {
-              window.location.href = "/";
-            } else {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-            setOpen(false);
-          }}
-          className="flex items-center gap-3 focus:outline-none"
+        <div
+          onClick={() => navigateTo("")}
+          className="flex items-center gap-3 cursor-pointer"
         >
           <img src="/assets/logo.png" alt="Decodiaries" className="h-10 md:h-12 w-auto" />
-        </button>
+        </div>
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-6">
           {links.map((link) => (
             <li key={link.id}>
-              <button
-                onClick={() => handleNavClick(link)}
-                className={`relative text-xs uppercase tracking-wide font-semibold transition px-2 py-1 ${
+              <div
+                onClick={() => navigateTo(link.sectionId)}
+                className={`relative text-xs uppercase tracking-wide font-semibold transition px-2 py-1 cursor-pointer ${
                   activeLink === link.id && window.location.pathname === "/"
                     ? "text-[#6B4F8C]"
                     : "text-gray-700 hover:text-[#6B4F8C]"
@@ -117,27 +102,27 @@ export default function Navbar() {
                     activeLink === link.id && window.location.pathname === "/" ? "w-full" : "w-0 group-hover:w-full"
                   }`}
                 />
-              </button>
+              </div>
             </li>
           ))}
         </ul>
 
         {/* Desktop CTA */}
-        <button
-          onClick={() => handleNavClick({ sectionId: "contact" })}
-          className="hidden lg:inline-flex items-center text-xs uppercase tracking-wider px-5 py-2 rounded-full shadow-md bg-[#6B4F8C] text-white hover:bg-[#4F3A6A] active:scale-95 transition-all"
+        <div
+          onClick={() => navigateTo("contact")}
+          className="hidden lg:inline-flex items-center text-xs uppercase tracking-wider px-5 py-2 rounded-full shadow-md bg-[#6B4F8C] text-white hover:bg-[#4F3A6A] active:scale-95 transition-all cursor-pointer"
         >
           Book Consultation
-        </button>
+        </div>
 
         {/* Mobile Menu Button */}
-        <button
+        <div
           onClick={() => setOpen(!open)}
-          className="lg:hidden p-2 rounded-lg text-gray-700 active:bg-gray-100 transition-all"
+          className="lg:hidden p-2 rounded-lg text-gray-700 active:bg-gray-100 transition-all cursor-pointer"
           aria-label="Toggle menu"
         >
           {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        </div>
       </div>
 
       {/* Mobile Menu Drawer */}
@@ -152,24 +137,24 @@ export default function Navbar() {
             <ul className="flex flex-col gap-1">
               {links.map((link) => (
                 <li key={link.id}>
-                  <button
-                    onClick={() => handleNavClick(link)}
-                    className="block text-gray-700 text-base py-3 px-3 rounded-lg active:bg-gray-50 transition-all w-full text-left"
+                  <div
+                    onClick={() => navigateTo(link.sectionId)}
+                    className="block text-gray-700 text-base py-3 px-3 rounded-lg active:bg-gray-50 transition-all w-full text-left cursor-pointer"
                   >
                     {link.label}
-                  </button>
+                  </div>
                 </li>
               ))}
               <li>
-                <button
+                <div
                   onClick={() => {
-                    handleNavClick({ sectionId: "contact" });
+                    navigateTo("contact");
                     setOpen(false);
                   }}
-                  className="w-full text-center bg-[#6B4F8C] text-white py-3 rounded-full text-sm font-medium mt-2 active:scale-95 transition-all"
+                  className="w-full text-center bg-[#6B4F8C] text-white py-3 rounded-full text-sm font-medium mt-2 active:scale-95 transition-all cursor-pointer"
                 >
                   Book Consultation
-                </button>
+                </div>
               </li>
             </ul>
           </motion.div>
