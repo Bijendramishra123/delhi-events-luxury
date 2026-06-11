@@ -2,10 +2,18 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Send, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, Send, Sparkles, X, Flower2, Cake, Baby, Star, Briefcase, Calendar, Music } from "lucide-react";
 import api, { formatPrice } from "../lib/api";
 
-const CATEGORIES = ["All", "Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
+const CATEGORIES = [
+  { id: "All", name: "All", icon: Sparkles, fullName: "All Events" },
+  { id: "Haldi", name: "Haldi", icon: Flower2, fullName: "Haldi Ceremony" },
+  { id: "Mehndi", name: "Mehndi", icon: Music, fullName: "Mehndi Night" },
+  { id: "Birthday", name: "Birthday", icon: Cake, fullName: "Birthday Party" },
+  { id: "Anniversary", name: "Anniversary", icon: Calendar, fullName: "Anniversary" },
+  { id: "Baby Shower", name: "Baby Shower", icon: Baby, fullName: "Baby Shower" },
+  { id: "Corporate", name: "Corporate", icon: Briefcase, fullName: "Corporate Events" },
+];
 
 // Lazy Image Component
 const LazyImage = ({ src, alt, className }) => {
@@ -49,6 +57,46 @@ function AvailabilityBadge({ status }) {
     </span>
   );
 }
+
+// Category Button with Tooltip
+const CategoryButton = ({ category, isActive, onClick }) => {
+  const Icon = category.icon;
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onClick(category.id)}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onTouchStart={() => setShowTooltip(true)}
+        onTouchEnd={() => setTimeout(() => setShowTooltip(false), 1000)}
+        className={`flex flex-col items-center justify-center gap-1 px-3 md:px-5 py-2 rounded-xl transition-all duration-300 min-w-[60px] md:min-w-[80px] active:scale-95 ${
+          isActive
+            ? "bg-[#6B4F8C] text-white shadow-md"
+            : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
+        }`}
+      >
+        <Icon size={18} className="md:w-5 md:h-5" />
+        <span className="text-[10px] md:text-xs font-medium">{category.name}</span>
+      </button>
+      
+      {/* Tooltip for mobile/desktop */}
+      <AnimatePresence>
+        {showTooltip && category.id !== "All" && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 bg-gray-800 text-white text-[10px] rounded whitespace-nowrap z-10 pointer-events-none"
+          >
+            {category.fullName}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 // Toast Notification Component
 const ToastNotification = ({ message, onClose }) => {
@@ -95,7 +143,6 @@ export default function PackagesSection() {
   useEffect(() => {
     api.get("/packages")
       .then(res => { 
-        // Filter out Wedding, Engagement, Housewarming packages
         const allowedCategories = ["Haldi", "Mehndi", "Birthday", "Anniversary", "Baby Shower", "Corporate"];
         const filteredPackages = res.data.filter(pkg => allowedCategories.includes(pkg.event_category));
         setPackages(filteredPackages);
@@ -171,19 +218,15 @@ export default function PackagesSection() {
           <p className="text-gray-500 text-sm md:text-base mt-2 max-w-2xl mx-auto">Explore our handcrafted packages designed for every special moment</p>
         </div>
 
-        <div className="flex flex-nowrap gap-2 mb-6 md:mb-8 overflow-x-auto pb-3 scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c}
-              onClick={() => { setFilter(c); setVisibleCount(6); }}
-              className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 ${
-                filter === c
-                  ? "bg-[#6B4F8C] text-white shadow-md"
-                  : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
-              }`}
-            >
-              {c === "All" ? "ALL" : c.toUpperCase()}
-            </button>
+        {/* Categories with Icons and Tooltips */}
+        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 md:mb-12">
+          {CATEGORIES.map((category) => (
+            <CategoryButton
+              key={category.id}
+              category={category}
+              isActive={filter === category.id}
+              onClick={setFilter}
+            />
           ))}
         </div>
 
