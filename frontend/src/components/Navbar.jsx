@@ -5,12 +5,12 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
-  { id: "home", label: "Home", hash: "" },
-  { id: "events", label: "Events", hash: "events" },
-  { id: "packages", label: "Packages", hash: "packages" },
-  { id: "gallery", label: "Gallery", hash: "gallery" },
-  { id: "testimonials", label: "Testimonials", hash: "testimonials" },
-  { id: "contact", label: "Contact", hash: "contact" },
+  { id: "home", label: "Home", path: "/", hash: "" },
+  { id: "events", label: "Events", path: "/", hash: "events" },
+  { id: "packages", label: "Packages", path: "/", hash: "packages" },
+  { id: "gallery", label: "Gallery", path: "/", hash: "gallery" },
+  { id: "testimonials", label: "Testimonials", path: "/", hash: "testimonials" },
+  { id: "contact", label: "Contact", path: "/", hash: "contact" },
 ];
 
 export default function Navbar() {
@@ -20,10 +20,10 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Close mobile menu when route changes
+  // Close mobile menu on route change
   useEffect(() => {
     setOpen(false);
-  }, [location]);
+  }, [location.pathname]);
 
   // Handle scroll effect and active link
   useEffect(() => {
@@ -59,23 +59,21 @@ export default function Navbar() {
     }
   }, [location]);
 
-  const scrollTo = (hash) => {
+  const scrollToSection = (hash) => {
     if (!hash || hash === "") {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    const el = document.getElementById(hash);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    const element = document.getElementById(hash);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
-  const handleClick = (e, link) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleNavigation = (link) => {
     setOpen(false);
     
-    if (!link.hash || link.hash === "") {
+    if (link.hash === "") {
       // Home link
       if (location.pathname !== "/") {
         navigate("/");
@@ -87,10 +85,10 @@ export default function Navbar() {
       // Section link
       if (location.pathname !== "/") {
         navigate(`/#${link.hash}`);
-        setTimeout(() => scrollTo(link.hash), 300);
+        setTimeout(() => scrollToSection(link.hash), 300);
       } else {
-        scrollTo(link.hash);
-        // Update URL without reload
+        scrollToSection(link.hash);
+        // Update URL hash without causing page jump
         window.history.pushState(null, "", `#${link.hash}`);
       }
     }
@@ -106,26 +104,32 @@ export default function Navbar() {
     <nav className={navClass}>
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
-        <button
+        <Link
+          to="/"
           onClick={() => {
-            if (location.pathname !== "/") {
-              navigate("/");
-            }
             window.scrollTo({ top: 0, behavior: "smooth" });
             setOpen(false);
           }}
-          className="flex items-center gap-3 focus:outline-none active:scale-95 transition-transform"
+          className="flex items-center gap-3 focus:outline-none"
         >
           <img src="/assets/logo.png" alt="Decodiaries" className="h-10 md:h-12 w-auto" />
-        </button>
+        </Link>
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-6">
           {links.map((link) => (
             <li key={link.id}>
-              <button
-                onClick={(e) => handleClick(e, link)}
-                className={`relative text-xs uppercase tracking-wide font-semibold transition px-2 py-1 focus:outline-none ${
+              <Link
+                to={link.hash ? `/#${link.hash}` : "/"}
+                onClick={(e) => {
+                  if (link.hash) {
+                    e.preventDefault();
+                    handleNavigation(link);
+                  } else {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
+                className={`relative text-xs uppercase tracking-wide font-semibold transition px-2 py-1 ${
                   activeLink === link.id && location.pathname === "/"
                     ? "text-[#6B4F8C]"
                     : "text-gray-700 hover:text-[#6B4F8C]"
@@ -137,14 +141,14 @@ export default function Navbar() {
                     activeLink === link.id && location.pathname === "/" ? "w-full" : "w-0 group-hover:w-full"
                   }`}
                 />
-              </button>
+              </Link>
             </li>
           ))}
         </ul>
 
         {/* Desktop CTA */}
         <button
-          onClick={(e) => handleClick(e, { hash: "contact" })}
+          onClick={() => handleNavigation({ hash: "contact" })}
           className="hidden lg:inline-flex items-center text-xs uppercase tracking-wider px-5 py-2 rounded-full shadow-md bg-[#6B4F8C] text-white hover:bg-[#4F3A6A] active:scale-95 transition-all"
         >
           Book Consultation
@@ -168,7 +172,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden bg-white border-t border-gray-100 px-4 py-4 shadow-lg max-h-[80vh] overflow-y-auto"
+            className="lg:hidden bg-white border-t border-gray-100 px-4 py-4 shadow-lg"
           >
             <ul className="flex flex-col gap-1">
               {links.map((link, idx) => (
@@ -178,12 +182,16 @@ export default function Navbar() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <button
-                    onClick={(e) => handleClick(e, link)}
-                    className="w-full text-left text-gray-700 text-base py-3 px-3 rounded-lg active:bg-gray-50 transition-all touch-manipulation"
+                  <Link
+                    to={link.hash ? `/#${link.hash}` : "/"}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNavigation(link);
+                    }}
+                    className="block text-gray-700 text-base py-3 px-3 rounded-lg active:bg-gray-50 transition-all w-full text-left"
                   >
                     {link.label}
-                  </button>
+                  </Link>
                 </motion.li>
               ))}
               <motion.li
@@ -192,8 +200,8 @@ export default function Navbar() {
                 transition={{ delay: 0.3 }}
               >
                 <button
-                  onClick={(e) => {
-                    handleClick(e, { hash: "contact" });
+                  onClick={() => {
+                    handleNavigation({ hash: "contact" });
                     setOpen(false);
                   }}
                   className="w-full text-center bg-[#6B4F8C] text-white py-3 rounded-full text-sm font-medium mt-2 active:scale-95 transition-all"
