@@ -1,20 +1,23 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Sparkles, Flower2, Cake, Baby, Star, Briefcase, Calendar, Music } from "lucide-react";
 import api from "../lib/api";
 
+// Same categories as PackagesSection
 const CATEGORIES = [
-  { id: "All", name: "All", fullName: "All Events" },
-  { id: "Haldi", name: "Haldi", fullName: "Haldi Ceremony" },
-  { id: "Mehndi", name: "Mehndi", fullName: "Mehndi Night" },
-  { id: "Birthday", name: "Birthday", fullName: "Birthday Party" },
-  { id: "Anniversary", name: "Anniversary", fullName: "Anniversary" },
-  { id: "Baby Shower", name: "Baby Shower", fullName: "Baby Shower" },
-  { id: "Corporate", name: "Corporate", fullName: "Corporate Events" },
+  { id: "All", name: "All", icon: Sparkles, fullName: "All Events" },
+  { id: "Haldi", name: "Haldi", icon: Flower2, fullName: "Haldi Ceremony" },
+  { id: "Mehndi", name: "Mehndi", icon: Music, fullName: "Mehndi Night" },
+  { id: "Birthday", name: "Birthday", icon: Cake, fullName: "Birthday Party" },
+  { id: "Anniversary", name: "Anniversary", icon: Calendar, fullName: "Anniversary" },
+  { id: "Baby Shower", name: "Baby Shower", icon: Baby, fullName: "Baby Shower" },
+  { id: "Corporate", name: "Corporate", icon: Briefcase, fullName: "Corporate Events" },
 ];
 
+// Category Button Component (same as PackagesSection)
 const CategoryButton = ({ category, isActive, onClick }) => {
+  const Icon = category.icon;
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -25,13 +28,14 @@ const CategoryButton = ({ category, isActive, onClick }) => {
         onMouseLeave={() => setShowTooltip(false)}
         onTouchStart={() => setShowTooltip(true)}
         onTouchEnd={() => setTimeout(() => setShowTooltip(false), 1000)}
-        className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 ${
+        className={`flex flex-col items-center justify-center gap-1 px-3 md:px-5 py-2 rounded-xl transition-all duration-300 min-w-[60px] md:min-w-[80px] active:scale-95 ${
           isActive
             ? "bg-[#6B4F8C] text-white shadow-md"
             : "bg-white text-[#6B4F8C] border border-[#BFA2DB]/30 hover:bg-gray-50"
         }`}
       >
-        {category.name}
+        <Icon size={18} className="md:w-5 md:h-5" />
+        <span className="text-[10px] md:text-xs font-medium">{category.name}</span>
       </button>
       
       {showTooltip && category.id !== "All" && (
@@ -115,6 +119,7 @@ export default function GallerySection() {
           <p className="text-gray-500 text-sm md:text-base mt-3">Explore our beautiful collection of celebration decor</p>
         </div>
 
+        {/* Categories - Same design as PackagesSection */}
         <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 md:mb-12">
           {CATEGORIES.map((category) => (
             <CategoryButton
@@ -126,9 +131,11 @@ export default function GallerySection() {
           ))}
         </div>
 
+        {/* Gallery Grid */}
         {filtered.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-gray-500">No images in this category yet.</p>
+            <p className="text-sm text-gray-400 mt-2">Use admin panel to add images to {filter} category</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
@@ -142,7 +149,6 @@ export default function GallerySection() {
                 className="relative group cursor-pointer rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300"
                 onClick={() => openLightbox(idx)}
               >
-                {/* Fixed aspect ratio container - 1:1 square */}
                 <div className="aspect-square w-full overflow-hidden bg-gray-100">
                   <img
                     src={item.image}
@@ -151,7 +157,6 @@ export default function GallerySection() {
                     loading="lazy"
                     onError={(e) => { 
                       e.target.src = "https://placehold.co/600x600?text=Image+Not+Found";
-                      e.target.onerror = null;
                     }}
                   />
                 </div>
@@ -164,43 +169,50 @@ export default function GallerySection() {
         )}
       </div>
 
-      {/* Lightbox Modal - Full size preview */}
-      {selectedImage && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center" onClick={closeLightbox}>
-          <button className="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2" onClick={closeLightbox}>
-            <X size={30} />
-          </button>
-          
-          <button 
-            className="absolute left-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
-            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-            disabled={currentIndex === 0}
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+            onClick={closeLightbox}
           >
-            <ChevronLeft size={30} />
-          </button>
-          
-          <div className="max-w-4xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={selectedImage.image} 
-              alt={selectedImage.title} 
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              onError={(e) => { e.target.src = "https://placehold.co/800x600?text=Image+Error"; }}
-            />
-            <div className="text-center mt-4 text-white">
-              <p className="text-sm uppercase tracking-wider text-[#BFA2DB]">{selectedImage.category}</p>
-              <p className="text-lg font-heading mt-1">{selectedImage.title}</p>
+            <button className="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2" onClick={closeLightbox}>
+              <X size={30} />
+            </button>
+            
+            <button 
+              className="absolute left-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
+              onClick={(e) => { e.stopPropagation(); prevImage(); }}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft size={30} />
+            </button>
+            
+            <div className="max-w-4xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <img 
+                src={selectedImage.image} 
+                alt={selectedImage.title} 
+                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              />
+              <div className="text-center mt-4 text-white">
+                <p className="text-sm uppercase tracking-wider text-[#BFA2DB]">{selectedImage.category}</p>
+                <p className="text-lg font-heading mt-1">{selectedImage.title}</p>
+              </div>
             </div>
-          </div>
-          
-          <button 
-            className="absolute right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
-            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-            disabled={currentIndex === filtered.length - 1}
-          >
-            <ChevronRight size={30} />
-          </button>
-        </div>
-      )}
+            
+            <button 
+              className="absolute right-4 text-white hover:text-gray-300 p-2 bg-black/50 rounded-full disabled:opacity-30"
+              onClick={(e) => { e.stopPropagation(); nextImage(); }}
+              disabled={currentIndex === filtered.length - 1}
+            >
+              <ChevronRight size={30} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
