@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,21 +54,20 @@ export default function Navbar() {
   }, []);
 
   // Navigation function
-  const scrollToSection = (sectionId) => {
-    setMobileMenuOpen(false);
-    
-    if (sectionId === "home") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      window.history.pushState(null, "", "/");
-      return;
-    }
-    
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      window.history.pushState(null, "", `#${sectionId}`);
-    }
-  };
+    const scrollToSection = (sectionId) => {
+      console.log("Clicked:", sectionId);
+
+      const element = document.getElementById(sectionId);
+
+      console.log("Element Found:", element);
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
