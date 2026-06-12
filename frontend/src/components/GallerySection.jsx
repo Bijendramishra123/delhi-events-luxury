@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Sparkles, Flower2, Cake, Baby, Star, Briefcase, Calendar, Music } from "lucide-react";
 import api from "../lib/api";
 
@@ -15,7 +15,7 @@ const CATEGORIES = [
   { id: "Corporate", name: "Corporate", icon: Briefcase, fullName: "Corporate Events" },
 ];
 
-// Category Button Component (same as PackagesSection)
+// Category Button Component
 const CategoryButton = ({ category, isActive, onClick }) => {
   const Icon = category.icon;
   const [showTooltip, setShowTooltip] = useState(false);
