@@ -347,3 +347,137 @@ button:active {
   transform: scale(0.97);
   transition: transform 0.05s ease;
 }
+/* ===== MODAL STYLES - Smooth, Responsive & Attractive ===== */
+
+/* Modal Overlay Animation */
+@keyframes modalOverlayFade {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Modal Content Animation */
+@keyframes modalContentPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Close Button Animation */
+@keyframes modalCloseBtn {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* Apply animations to modal */
+.fixed.inset-0.z-\[9999\] {
+  animation: modalOverlayFade 0.25s ease-out forwards;
+}
+
+.fixed.inset-0.z-\[9999\] > div:first-child {
+  animation: modalContentPop 0.3s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+.fixed.inset-0.z-\[9999\] button {
+  animation: modalCloseBtn 0.25s ease-out 0.1s both;
+}
+
+/* Modal Content Scrollbar Styling */
+.fixed.inset-0.z-\[9999\] .overflow-y-auto::-webkit-scrollbar {
+  width: 5px;
+}
+
+.fixed.inset-0.z-\[9999\] .overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(191, 162, 219, 0.1);
+  border-radius: 10px;
+}
+
+.fixed.inset-0.z-\[9999\] .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 10px;
+}
+
+.fixed.inset-0.z-\[9999\] .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Mobile Responsive Modal */
+@media (max-width: 640px) {
+  .fixed.inset-0.z-\[9999\] {
+    padding: 0.75rem;
+  }
+  
+  .fixed.inset-0.z-\[9999\] > div:first-child {
+    max-width: 100%;
+    border-radius: 1.5rem;
+  }
+  
+  .fixed.inset-0.z-\[9999\] button {
+    right: 0.75rem;
+    top: 0.75rem;
+    padding: 0.5rem;
+  }
+  
+  .fixed.inset-0.z-\[9999\] button svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Tablet Responsive Modal */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .fixed.inset-0.z-\[9999\] > div:first-child {
+    max-width: 90%;
+  }
+}
+
+/* Smooth hover effect for close button */
+.fixed.inset-0.z-\[9999\] button {
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.fixed.inset-0.z-\[9999\] button:hover {
+  transform: scale(1.1);
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.fixed.inset-0.z-\[9999\] button:active {
+  transform: scale(0.95);
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0px);
+}
+
+/* Modal backdrop blur support for all browsers */
+@supports (backdrop-filter: blur(4px)) {
+  .fixed.inset-0.z-\[9999\] {
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(4px)) {
+  .fixed.inset-0.z-\[9999\] {
+    background-color: rgba(0, 0, 0, 0.75);
+  }
+}
